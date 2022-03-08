@@ -1,6 +1,6 @@
 # METAR
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
-+ Created by John Pipe with help from David Bird and some code from Ruis Santos.
++ Created by John Pipe with lots of help from David Bird and some code from Ruis Santos.
 
 This code was created for ESP32 to get a group of METARS and display them on :
 
