@@ -1,8 +1,8 @@
 # METAR
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
-+ Created by John Pipe with lots of help from David Bird and some code from Ruis Santos.
++ Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
 
-This code was created for ESP32 to get a group of METARS and display them on :
+This programme uses the two ESP32 cores, one to Get Data and Handle the LEDS, the other to run a webserver to get and display the data :
 
 + A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Catorgry with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
@@ -10,7 +10,7 @@ This code was created for ESP32 to get a group of METARS and display them on :
 
 Either or Both of the above can be implemented.
 
-The number and names of the Stations are Configurable for you application.
+The number and names of the Stations are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
 
