@@ -33,13 +33,14 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 + HTML DISPLAYS : Can be accesed by any device connected to a WiFi local network.
 + METAR Summary Display Example:
 
-![summary_4_24_21](https://user-images.githubusercontent.com/24758833/157295508-0d0aa25a-314e-43e0-89f6-e5f5db609c49.jpg)
+
+![Summary_3_8](https://user-images.githubusercontent.com/24758833/157302360-1a6c893c-3b95-476c-b7d6-a997288b4bfb.jpg)
 
 
 + METAR Station Display Example:
 
-![Columbus_4_24_21](https://user-images.githubusercontent.com/24758833/157295673-1ff81aeb-df4e-44bc-9257-744d68b80a44.jpg)
 
+![ATLANTA_3_8](https://user-images.githubusercontent.com/24758833/157302434-2aca9c6a-6f6b-4dd7-b3f8-ecf3f084f094.jpg)
 
 
 
