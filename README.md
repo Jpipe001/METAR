@@ -43,5 +43,5 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 ![ATLANTA_3_8](https://user-images.githubusercontent.com/24758833/157302434-2aca9c6a-6f6b-4dd7-b3f8-ecf3f084f094.jpg)
 
 
-+ See Additional Comments in the program file.
++ See Additional Remarks/Comments in the program file.
 + Not for Commercial Use.
