@@ -80,7 +80,7 @@ WiFiServer server(80);   // Set web server port number to 80
 
 //  Configure Network
 const char*        ssid = "network name";       // your network SSID (name)
-const char*    password = "passwoord";          // your network password
+const char*    password = "password";           // your network password
 
 // Setup from Time Server
 const char* ntpServer = "pool.ntp.org";
