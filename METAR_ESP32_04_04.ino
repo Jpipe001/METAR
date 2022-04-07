@@ -1364,11 +1364,11 @@ String Decode_Weather(String weather) {
     int search1 = weather.lastIndexOf(" ", search0);
     int search2 = weather.lastIndexOf("G", search0);
     if (search2 == search1 + 6) {
-      String Wind = " Wind~" + weather.substring(search1, search1 + 4) + "Deg " + weather.substring(search1 + 4, search2) + "KT Gusting to " + weather.substring(search2 + 1, search0) + "KT";
+      String Wind = " Wind~" + weather.substring(search1, search1 + 4) + "Deg " + weather.substring(search1 + 4, search2) + "KT Gusting to " + weather.substring(search2 + 1, search0) + "KT ";
       weather.replace(weather.substring(search1, search0 + 2), Wind);
     }
     if (search2 <= 0) {
-      String Wind = " Wind~" + weather.substring(search1, search1 + 4) + "Deg " + weather.substring(search1 + 4, search0) + "KT";
+      String Wind = " Wind~" + weather.substring(search1, search1 + 4) + "Deg " + weather.substring(search1 + 4, search0) + "KT ";
       weather.replace(weather.substring(search1, search0 + 2), Wind);
     }
   }
