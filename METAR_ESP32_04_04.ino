@@ -1192,8 +1192,8 @@ String Decode_Weather(String weather) {
 
   weather.replace("SFC VIS", " SurfaceVIS");
   weather.replace("SFC", "Surface");
-  weather.replace("TWR VIS", " TowerVIS ");
-  weather.replace("TWR", " TowerVIS ");
+  weather.replace("TWR VIS", " TowerVIS");
+  weather.replace("TWR", " TowerVIS");
   weather.replace("VV", "visability variable");         // Rename Later
   weather.replace("VISBL", "visabile");                 // Rename Later
   weather.replace("VIS M", "visability Measured");      // Rename Later
