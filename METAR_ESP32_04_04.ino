@@ -574,11 +574,17 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     String mesg;
     String text;
 
+
     // Search for Remark Start in Parsed_metar
-    search_From = Parsed_metar.indexOf("Z ", search_Strt) + 10;                     // Start search from timeZ +10
-    search_End = Parsed_metar.indexOf(" A", search_From) + 10;                      // Search for A  in  US : Start of Remark
-    if (search_End < 10)  search_End = Parsed_metar.indexOf(" Q", search_From) + 6; // Search for Q  Non US : Start of Remark
-    if (search_End > search_Raw_Text)  search_End = search_Raw_Text;                // Use Default for End
+    search_From = Parsed_metar.indexOf("Z ", search_Strt) + 10;           // Start search from timeZ +10
+    int search_EndR = Parsed_metar.indexOf("RMK", search_From) + 3;       // Search for RMK : Start of Remark
+    search_End = Parsed_metar.indexOf(" A", search_From) + 10;            // Search for A in US : Start of Remark
+    if (search_EndR  < 3)  search_EndR = search_End;                      // No REM in US : Start of Remark = A
+    if (search_End  >= search_EndR)  search_End = search_EndR;            // Found AO : Not A in US : Start of Remark = REM
+    int search_EndQ = Parsed_metar.indexOf(" Q", search_From) + 6;        // Search for Q  Non US
+    if (search_EndQ  > 6)  search_End = search_EndQ;                      // Found Q : Non US : Start of Remark
+    if (search_End > search_Raw_Text)  search_End = search_Raw_Text;      // Use Default for End : Start of Remark
+
 
     // *** CREATE  Remark : Codes
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
