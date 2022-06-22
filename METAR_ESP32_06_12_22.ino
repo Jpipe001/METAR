@@ -1,4 +1,4 @@
-/*  06/08/2022
+/*  06/12/2022
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
   https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.
