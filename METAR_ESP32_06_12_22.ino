@@ -104,6 +104,7 @@
   Modified Search 04/04/22
   Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
+  Made things a Little better
 */
 
 #include <Arduino.h>
@@ -116,17 +117,6 @@ WiFiMulti wifiMulti;
 
 WiFiServer server(80);   // Set web server port number to 80
 
-//  Configure Network
-const char*      ssid = "your network name";          // your network SSID (name)
-const char*  password = "your network password";      // your network password
-
-
-// Setup from Time Server
-const char* ntpServer = "pool.ntp.org";
-const long  gmtOffset_sec = 0;                // UTC Time : Time Zone 60*60*0 Hrs
-const int   daylightOffset_sec = 0;           // UTC Time : Offset 60*60*0 Hr
-struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M:%S"
-
 // To get Station DATA used for MetarData in "GetData" Routine
 // Test link: https://www.aviationweather.gov/adds/dataserver_current/httpparam?datasource=metars&requestType=retrieve&format=xml&mostRecentForEachStation=constraint&hoursBeforeNow=1.25&stationString=KFLL,KFXE
 String    host = "https://aviationweather.gov";
@@ -136,8 +126,26 @@ String    urlb = "/adds/dataserver_current/httpparam?datasource=metars&requestTy
 // Test link: https://aviationweather.gov/adds/dataserver_current/httpparam?dataSource=Stations&requestType=retrieve&format=xml&stationString=KFLL
 String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&requestType=retrieve&format=xml&stationString=";
 
-// To Invoke HTML Display/Web Page after downloading code with a Stable LOGICAL Address, because hardware address ay change.
+// To Invoke HTML Display/Web Page after downloading code with a Stable LOGICAL Address, because hardware address may change.
 // Test link Address: http://metar.local
+
+
+//  ################   ENTER YOUR SETTINGS HERE  ################
+// Configure Network
+//const char*      ssid = "your network name";          // your network SSID (name)
+//const char*  password = "your network password";      // your network password
+
+//const char*      ssid = "iPhone";          // your network SSID (name)
+//const char*  password = "johnjohn";        // your network password
+
+const char*        ssid = "NETGEAR46";       // "Your Network SSID (Name)"
+const char*    password = "icysea351";       // "Your Network Password"
+
+// Set Up Time Server
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 0;                // UTC Time : Time Zone 60*60*0 Hrs
+const int   daylightOffset_sec = 0;           // UTC Time : Offset 60*60*0 Hr
+struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M:%S"
 
 
 // Set Up LEDS
@@ -161,7 +169,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KCTJ, CARROLTON, GA        ",        // 5
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station name
   "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas"
-  "KMCN, MACON, GA            ",        // 8  Padding after station name are not necessary.
+  "KMCN, MACON, GA            ",        // 8  Padding after station name is not necessary.
   "KCKF, CORDELLE, GA         ",        // 9
   "KABY, ALBANY, GA           ",        // 10 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
   "KTLH, TALLAHASSEE, FL      ",        // 11
@@ -216,6 +224,8 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KCEU, CLEMSON, GA          ",        // 60
 };                                      // << Do NOT change this line
 
+//  ################   END OF SETTINGS  ################
+
 PROGMEM String StationMetar[No_Stations + 1];  // Station Metar
 PROGMEM String      Remark[No_Stations + 1];   // Remark
 PROGMEM String Sig_Weather[No_Stations + 1];   // Significant Weather
@@ -223,17 +233,17 @@ PROGMEM float         temp[No_Stations + 1];   // Temperature deg C
 PROGMEM float        dewpt[No_Stations + 1];   // Dew point deg C
 PROGMEM String        Wind[No_Stations + 1];   // Wind speed
 PROGMEM String        wDir[No_Stations + 1];   // Wind direction
-PROGMEM int       old_wDir[No_Stations + 1];   // old Wind direction
+PROGMEM int       old_wDir[No_Stations + 1];   // Old Wind direction
 PROGMEM float        visab[No_Stations + 1];   // Visibility
 PROGMEM String         Sky[No_Stations + 1];   // Sky_cover
 PROGMEM int new_cloud_base[No_Stations + 1];   // New Cloud Base
 PROGMEM int old_cloud_base[No_Stations + 1];   // Old Cloud Base
 PROGMEM float      seapres[No_Stations + 1];   // Sea Level Pressure
 PROGMEM float        altim[No_Stations + 1];   // Altimeter setting
-PROGMEM float    old_altim[No_Stations + 1];   // old altimeter setting
+PROGMEM float    old_altim[No_Stations + 1];   // Old altimeter setting
 PROGMEM float    elevation[No_Stations + 1];   // Elevation setting
 PROGMEM String    Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
-//..............................................Black  Green   Blue   Red    Magenta
+//.............................................. Black  Green   Blue   Red   Magenta
 
 #define LED_BUILTIN 2         // ON Board LED GPIO 2
 PROGMEM String MetarData;     // Raw METAR data
@@ -260,7 +270,7 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);     // The Onboard LED
   Serial.begin(115200);
   delay(4000);         // Time to press "Clear output" in Serial Monitor
-  
+
   Serial.printf("\nMETAR Reporting with LEDs and Local WEB SERVER\n");
   ShortFileName = String(__FILE__).substring(String(__FILE__).lastIndexOf("\\") + 1);  // Shortened File Name
   Serial.printf("Program       ~ %s\n", __FILE__);
@@ -269,14 +279,21 @@ void setup() {
 
   Init_LEDS();         // Initialize LEDs
   if (String(ssid) == "iPhone")  Serial.printf("** If DOESN'T Connect:  Select HOT SPOT on iPhone **\n");
-  Serial.printf("WiFi Connecting to %s  ", ssid);
 
-  // Initializes the WiFi library's network settings.
+  // Initialize the WiFi network settings.
   WiFi.begin(ssid, password);
+  
   // CONNECT to WiFi network:
+  Serial.printf("WiFi Connecting to %s  ", ssid);
+  int count = 0;
   while (WiFi.status() != WL_CONNECTED)   {
     delay(300);    // Wait a little bit
     Serial.printf(".");
+    count++;
+    if (count > 100) {    // Loop for 100 tries
+      Serial.printf("\n ~ Can't Connect to Network\n");
+      return;
+    }
   }
   Serial.printf(" ~ Connected Successfully\n");
 
@@ -299,14 +316,15 @@ void setup() {
   HW_addr = WiFi.localIP().toString();
   Serial.printf("\n\t\tUse IP Address \t: %s\n", HW_addr);
   SW_addr = "http://" + String(ServerName) + ".local";
-  Serial.printf("MDNS started ~\tCan Use Address : http://%s.local\n", ServerName);
+  Serial.printf("MDNS started ~\tOr Use Address \t: http://%s.local\n", ServerName);
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);   // Get UTC Time from Server
   Update_Time();          // Set Up Time : Hour & Minute
 
   char TimeChar[50];
   int Time_Char_Len = strftime(TimeChar, sizeof(TimeChar), "%A, %B %d %Y %H:%M - UTC", &timeinfo);
-  Serial.printf("Date & Time :\t%s\n", TimeChar);
+  Serial.printf("Date & Time \t: %s\n", TimeChar);
+  //Serial.printf("Time_Char_Len \t: %d\n", Time_Char_Len);     // To Check Actual size of Custom_Time String
 
   //Task1 = Main_Loop() function, with priority 1 and executed on core 0 for Getting Data and Display Leds
   xTaskCreatePinnedToCore( Main_Loop, "Task1", 10000, NULL, 1, &Task1, 0);
@@ -428,6 +446,7 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
   }
 }
 
+
 // *********** GET Some Metar Data/Name Group of Stations at a time
 void GetData(String url, byte i) {
   MetarData = "";                     // Reset Raw Data for Group of Stations <20 at a time
@@ -512,11 +531,11 @@ void ParseMetar(byte i) {
     // Station NOT found or NOT reporting
     //Communication Error httpCode = -11 : read Timeout DON'T Print
     if (httpCode != -11)   {
-      Serial.printf("%s\tNo:%d\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station);
+      Serial.printf("%s\tNo:%d\t\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station);
       if (Data_End < 0 )
         Serial.printf("\tIn ParseMetar:  Data_Start=%d  Data_End=%d\n", Data_Start, Data_End);
       if (Data_Start < 0 && Data_End < 0 )
-        Serial.printf("Likely Communication or Station Code Error\n");
+        Serial.printf("\tLikely Communication or Station Code Error\n");
       //Serial.println("MetarData=\n" + MetarData.substring(0, MetarData.length()));
     }
 
@@ -538,6 +557,7 @@ void ParseMetar(byte i) {
     Display_LED (i, 20);            // Display Station LED
   }
 }
+
 
 // *********** DECODE the Station DATA
 void Decodedata(byte i, String station, String Parsed_metar) {
@@ -608,7 +628,6 @@ void Decodedata(byte i, String station, String Parsed_metar) {
 
     // For Troubleshooting : Print Parsed_metar
     Serial.printf("Station No %d\t\t%s %s %s\n", i, station, Code.c_str(), Remark[i].c_str());
-    //Serial.println("Station No " + String(i) + "\t\t" + station + " " + Parsed_metar.substring(search_Strt, search_End) + Remark[i]);
 
     // DECODING Remark  (Mainly REMOVE unwanted codes)
     //  **** REMOVE   AO   Automated Station
@@ -1071,6 +1090,8 @@ String Decode_Weather(String weather) {
   weather.replace("CONS ", " Continuous");
   weather.replace("PDMTLY", " Predominantly");
   weather.replace("TRANSPARENT", "Transparent");
+  weather.replace("TORNADO", "Tornado");
+  weather.replace("WATERSPOUT", "Waterspout");
 
   weather.replace("ICE", "Ice");
   weather.replace("STNRY", "Stationary");
@@ -1079,6 +1100,7 @@ String Decode_Weather(String weather) {
   weather.replace("SLWLY", "Slowly");
   weather.replace("BANK", "bank");               // Rename Later
 
+  weather.replace("OBSCURED", "Obscured");
   weather.replace("OBSC", "Obscured");
   weather.replace("FROPA", " Frontal Passage ");
   weather.replace("PRESFR", " Pressure Falling Rapidly ");
