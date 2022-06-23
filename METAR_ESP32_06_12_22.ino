@@ -108,12 +108,12 @@
 */
 
 #include <Arduino.h>
-#include <FastLED.h>
+#include <FastLED.h>      // FastLED  by Daniel Garcia
 #include <WiFi.h>
-#include <WiFiMulti.h>
+#include <WiFiMulti.h>    // WifiMulti_Generic  by Khoi Hoang
 WiFiMulti wifiMulti;
-#include <HTTPClient.h>
-#include "ESPmDNS.h"
+#include <HTTPClient.h>   // HttpClient  by Adrian McEwen
+#include "ESPmDNS.h"      // MDNS_Generic  by Khoi Hoang
 
 WiFiServer server(80);   // Set web server port number to 80
 
@@ -132,8 +132,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network
-//const char*      ssid = "your network name";          // your network SSID (name)
-//const char*  password = "your network password";      // your network password
+const char*      ssid = "your network name";          // your network SSID (name)
+const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name)
 //const char*  password = "johnjohn";        // your network password
@@ -148,7 +148,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 // Set Up LEDS
 #define No_Stations          52      // Number of Stations also Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
-#define DATA_PIN              5      // Connect to pin D5/P5 with 330 to 500 Ohm Resistor
+#define DATA_PIN              5      // Connect to pin D5/P5/GPIO 5 with 330 to 500 Ohm Resistor
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
 #define COLOR_ORDER         GRB      // WS2811 are GRB or WS2812 are RGB or NEOPIXEL are CRGB
 #define BRIGHTNESS           20      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
