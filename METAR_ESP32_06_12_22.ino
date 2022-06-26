@@ -1,7 +1,7 @@
-/*  06/12/2022
+/*  06/26/2022
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
-  https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.
+  https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.  ~  GOOD READ
 
   https://youtu.be/Yg61_kyG2zE    HomebuiltHELP; The video that started me on this project.
   https://youtu.be/xPlN_Tk3VLQ    Getting Started with ESP32 video from DroneBot Workshop.
@@ -46,8 +46,8 @@
   A set of WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
   Then cycles through all the stations and flashes individually for:
   Wind Gusts(Cyan)[suspendable], Precipitation(Green/White), Ice(Blue), Other(Yellow) and Significatant Change(Orange).
-  Then displays "RAINBOW" for all stations, for Visibility [Red Orange Pink/White], Wind Speed Gradient [Cyan],
-  Temperature Gradient [Blue Green Yellow Orange Red] and Altimeter Pressure Gradient [Blue Purple].
+  Then displays "RAINBOW" for all stations, for Visibility [White to Red], Wind Speed Gradient [Cyan],
+  Temperature Gradient [Blue Green Yellow Orange Red] and Altimeter Pressure Gradient [Blue to Purple].
 
   DISPLAYS: Viewble with a computer or cell phone connected to the SAME network:
   SUMMARY html gives a colorful overview and
@@ -104,7 +104,8 @@
   Modified Search 04/04/22
   Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
-  Made things a Little better
+  Changed Temperature Display Colors 06/26/22
+  Made things a Little better !!
 */
 
 #include <Arduino.h>
@@ -115,7 +116,7 @@ WiFiMulti wifiMulti;
 #include <HTTPClient.h>   // HttpClient  by Adrian McEwen
 #include "ESPmDNS.h"      // MDNS_Generic  by Khoi Hoang
 
-WiFiServer server(80);   // Set web server port number to 80
+WiFiServer server(80);    // Set web server port number to 80
 
 // To get Station DATA used for MetarData in "GetData" Routine
 // Test link: https://www.aviationweather.gov/adds/dataserver_current/httpparam?datasource=metars&requestType=retrieve&format=xml&mostRecentForEachStation=constraint&hoursBeforeNow=1.25&stationString=KFLL,KFXE
@@ -148,7 +149,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 // Set Up LEDS
 #define No_Stations          52      // Number of Stations also Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
-#define DATA_PIN              5      // Connect to pin D5/P5/GPIO 5 with 330 to 500 Ohm Resistor
+#define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With ***  330 to 500 Ohm Resistor
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
 #define COLOR_ORDER         GRB      // WS2811 are GRB or WS2812 are RGB or NEOPIXEL are CRGB
 #define BRIGHTNESS           20      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
@@ -349,7 +350,7 @@ void Main_Loop( void * pvParameters ) {
   for (;;) {
     Last_Up_Time = Clock;
     Last_Up_Min = Minute;
-    Update_Time();                   // Update CurrentTime : Hour & Minute
+    Update_Time();                   // Update Current Time : Hour & Minute
 
     if (Last_Up_Min + Update_Interval > 60)   Last_Up_Min = 60 - Update_Interval;
     Count_Down = Last_Up_Min + Update_Interval - Minute;
@@ -448,7 +449,7 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
 void GetData(String url, byte i) {
   MetarData = "";                     // Reset Raw Data for Group of Stations <20 at a time
 
-  if (url == "NAME") url = host + urls + Stations[0];  else   url = host + urlb + url;
+  if (url == "NAME") url = host + urls + Stations[i];  else   url = host + urlb + url;
 
   if ((wifiMulti.run() == WL_CONNECTED)) {
     digitalWrite(LED_BUILTIN, HIGH);  // ON
@@ -1180,7 +1181,6 @@ String Decode_Weather(String weather) {
   weather.replace("FREQ", " Frequent");
   weather.replace("FRQ LTG", "FRQLTG");
   weather.replace("FRQ", " Frequent");
-  weather.replace("AND", "and");
   weather.replace("IN VICINTY", "VC");
 
   weather.replace("LTGICCCCA", "LTG LTinC CA");        // Lightning in Cloud and Air
@@ -1561,18 +1561,18 @@ void Set_Cat_LED (byte i)  {
   if (Category[i] == "IFR" ) leds[i - 1] = CRGB::DarkRed;
   if (Category[i] == "LIFR") leds[i - 1] = CRGB::DarkMagenta;
   if (Category[i] == "NA" )  leds[i - 1] = CRGB(20, 20, 0); // DIM  Yellowish
-  //if (Category[i] == "NF" )  leds[i - 1] = CRGB(12, 14, 14); // VERY DIM  Blueish
   if (Category[i] == "NF" )  leds[i - 1] = CRGB::Black;
 }
 
 
-// *********** Display Visibility [Red Orange Pink/White]
+// *********** Display Visibility [Red White]
 void Display_Vis_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue     =       visab[i] * 5; // (red yellow white)
-    byte sat     = 170 - visab[i] * 6;
-    byte bright  = 200 - visab[i] * 4;
+    byte hue     = 10  + visab[i] * 4;   // (red white) [ 10 - 50 ]
+    byte sat     = 180 - visab[i] * 18;  // (red white) [ 0 - 180 ]
+    byte bright  = 120;                  // [ <100=Dim  120=ok  >160=Too Bright/Much Power ]
     leds[i - 1] = CHSV(hue, sat, bright);
+    if (visab[i] > 9)   leds[i - 1] = CHSV( 45, 0, bright); // White
     if (visab[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
@@ -1657,10 +1657,9 @@ void Go_Server ( void * pvParameters ) {
               html_code += "Content-type:text/html";
               html_code += "Connection: close";
               client.println(html_code);
-              //client.print(F("Refresh: 60"));  // refresh the page automatically every 60 sec
+              //client.print(F("Refresh: 60"));  // Refresh the page automatically every 60 sec
               client.println();                  // Send  a blank line
 
-              //Serial.println(header);
 
               // *******   CHECKING BUTTONS & Handling Requests    ******
               // Checking if AIRPORT CODE was Entered
@@ -1673,8 +1672,8 @@ void Go_Server ( void * pvParameters ) {
                   if (Airport_Code == Stations[i].substring(0, 4))    sta_n = i;
                 }
 
-                if (sta_n == -1)  {           // Airport_Code NOT in Data base, ADD as Station[0]
-                  sta_n = 0;
+                if (sta_n == -1)  {           // Airport_Code NOT in Data base
+                  sta_n = 0;                  // ADD as Station[0], Can be set to overwrite other Station
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
@@ -1692,21 +1691,17 @@ void Go_Server ( void * pvParameters ) {
                     if (count > 100)  return;
                   }
                   // Communication Flag - GetData is NOT running Communication Flag 0
-                  Comms_Flag = 1;           // Set Communication Flag 1=Active
+                  Comms_Flag = 1;             // Set Communication Flag 1=Active
 
-                  //Serial.println(Clock + "   Getting Metar NAME for " + String(Airport_Code));
-                  GetData("NAME", 0);       // GET Some Metar /NAME
-                  //Serial.println(Clock + "   Decode NAME for " + String(Airport_Code));
-                  Decode_Name(0);           // Decode Station NAME
-                  //Serial.println(Clock + "   Get Metar DATA for " + String(Airport_Code));
-                  GetData(Airport_Code, 0); // GET Some Metar /DATA
-                  //Serial.println(Clock + "   ParseMetar for " + String(Airport_Code));
-                  ParseMetar(0);            // Parse Metar DATA
+                  GetData("NAME", sta_n);    // GET Some Metar /NAME
+                  Decode_Name(sta_n);        // Decode Station NAME
+                  GetData(Airport_Code, sta_n); // GET Some Metar /DATA
+                  ParseMetar(sta_n);        // Parse Metar DATA
 
                   Comms_Flag = 0;           // Set Communication Flag 0=Reset
 
-                  if (Category[0] == "NF")   {   // Checking for Error in Station Name
-                    StationMetar[0] = Airport_Code + " : Error in Station Name or NA";
+                  if (Category[sta_n] == "NF")   {   // Checking for Error in Station Name
+                    StationMetar[sta_n] = Airport_Code + " : Error in Station Name or NA";
                   }
                 }
                 summary_flag = 0;
