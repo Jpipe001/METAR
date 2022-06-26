@@ -1250,7 +1250,7 @@ String Decode_Weather(String weather) {
   weather.replace("SHRA", "Rain Showers");
   weather.replace("SHSN", "Snow Showers");
   weather.replace("RASN", "Rain and Snow");
-  weather.replace("TSRA", "Rain andTS");
+  weather.replace("TSRA", "Rain and Thunderstorm");
   weather.replace("VCSH", " Showers VC");
   weather.replace("VCSH", "Rain Shower VC");
   weather.replace("VCTS", "TS VC");
