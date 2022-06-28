@@ -54,7 +54,7 @@
   STATION html shows DECODED METAR information and much MORE.  (See Below for Improvements)
 
   NOTE: To view these, you need the http address which is shown at start up, if the Serial Monitor is swiched on.
-  or Click on Logical Test Link  http://metar.local/
+  or Click on Logical Name Test Link  http://metar.local/
 
   Makes a GREAT Christmas Tree Chain of Lights, TOO (and a Good Conversation Piece).
 
@@ -104,7 +104,7 @@
   Modified Search 04/04/22
   Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
-  Changed Temperature Display Colors 06/26/22
+  Changed Vis/Temp/Press Display Colors 06/26/22
   Made things a Little better !!
 */
 
@@ -133,8 +133,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network
-const char*      ssid = "your network name";          // your network SSID (name)
-const char*  password = "your network password";      // your network password
+//const char*      ssid = "your network name";          // your network SSID (name)
+//const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name)
 //const char*  password = "johnjohn";        // your network password
@@ -385,8 +385,8 @@ void Display_Metar_LEDS () {
   // ***********   Comment these lines out to suspend a function
 
   Display_Weather_LEDS (10);        //  Display Twinkle Weather
-  delay(8000);                      //  Delay after Loop (Seconds x 1000) ~~ Do NOT Remove
-  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Orange-White]
+  delay(8000);                      //  Delay after Loop (Seconds * 1000) ~~ Do NOT Remove
+  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White]
   //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]
   Display_Temp_LEDS (Wait_Time);    //  Display Temperatures [Blue-Green-Yellow-Red]
   Display_Alt_LEDS (Wait_Time);     //  Display Altimeter Pressure [Blue-Purple]
@@ -1154,6 +1154,7 @@ String Decode_Weather(String weather) {
   weather.replace("SNINCR", "Snow Increasing Rapidily");
   weather.replace("ACFT MSHP", " Aircraft Mishap");
   weather.replace("STFD", "Staffed");
+  weather.replace("FM", " From");
   weather.replace("FST", " First");
   weather.replace("LAST", " Last");
   weather.replace("OBS", "Observation");
@@ -1457,25 +1458,6 @@ void Display_LED(byte index, int wait) {
 }
 
 
-// *********** DECODE the Station NAME
-void Decode_Name(byte i) {
-  String Station_name = Stations[i].substring(0, 4);
-  int search0 = MetarData.indexOf(Station_name) + 1;      // Start Search from Here
-  int search1 = MetarData.indexOf("<site", search0);
-  int search2 = MetarData.indexOf("</site", search0);
-  if (search1 > 0 && search2 > 0)   Station_name = Station_name + ", " + MetarData.substring(search1 + 6, search2) + ",";
-  search1 = MetarData.indexOf("<country", search0);
-  search2 = MetarData.indexOf("</country", search0);
-  if (MetarData.substring(search1 + 9, search2) == "US") {
-    search1 = MetarData.indexOf("<state", search0);
-    search2 = MetarData.indexOf("</state", search0);
-    if (search1 > 0)   Station_name = Station_name + " " + MetarData.substring(search1 + 7, search2);
-  }
-  if (search1 > 0 && search2 > 0)   Station_name = Station_name + " " + MetarData.substring(search1 + 9, search2);
-  Stations[i] = Station_name.c_str();
-}
-
-
 // ***********  Display Weather on LEDS
 void Display_Weather_LEDS (int wait) {
   Display_Cat_LEDS ();             //  Display All Categories
@@ -1568,10 +1550,10 @@ void Set_Cat_LED (byte i)  {
 // *********** Display Visibility [Red White]
 void Display_Vis_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue     = 10  + visab[i] * 4;   // (red white) [ 10 - 50 ]
-    byte sat     = 180 - visab[i] * 18;  // (red white) [ 0 - 180 ]
-    byte bright  = 120;                  // [ <100=Dim  120=ok  >160=Too Bright/Much Power ]
-    leds[i - 1] = CHSV(hue, sat, bright);
+    byte hue     = 10  + visab[i] * 4;       // (red white) [ 10 - 50 ]
+    byte sat     = 180 - visab[i] * 18;      // (red white) [ 0 - 180 ]
+    byte bright  = 120;                      // [ <100=Dim  120=ok  >160=Too Bright/Much Power ]
+    leds[i - 1] = CHSV(hue, sat, bright);    // ( hue, sat, bright )
     if (visab[i] > 9)   leds[i - 1] = CHSV( 45, 0, bright); // White
     if (visab[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
@@ -1596,7 +1578,7 @@ void Display_Wind_LEDS (int wait) {
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
     byte hue = 160 - temp[i] * 4;         //  purple blue green yellow orange red
-    leds[i - 1] = CHSV( hue, 180, 150);
+    leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
     if (temp[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
@@ -1607,12 +1589,31 @@ void Display_Temp_LEDS (int wait) {
 // *********** Display Altimeter Pressure [Blue Purple]
 void Display_Alt_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = (altim[i] - 27.92) * 100;     //  blue purple
-    leds[i - 1] = CHSV( hue - 30, 130, 150);
+    byte hue = (altim[i] - 29.92) * 100;        //  (normally) blue purple [ 70 - 270 ]
+    leds[i - 1] = CHSV( hue + 170, 180, 150);   // ( hue, sat, bright )
     if (altim[i] == 0 || Category[i].substring(0, 1) == "NF")   leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
   delay(wait);
+}
+
+
+// *********** DECODE the Station NAME
+void Decode_Name(byte i) {
+  String Station_name = Stations[i].substring(0, 4);
+  int search0 = MetarData.indexOf(Station_name) + 1;      // Start Search from Here
+  int search1 = MetarData.indexOf("<site", search0);
+  int search2 = MetarData.indexOf("</site", search0);
+  if (search1 > 0 && search2 > 0)   Station_name = Station_name + ", " + MetarData.substring(search1 + 6, search2) + ",";
+  search1 = MetarData.indexOf("<country", search0);
+  search2 = MetarData.indexOf("</country", search0);
+  if (MetarData.substring(search1 + 9, search2) == "US") {
+    search1 = MetarData.indexOf("<state", search0);
+    search2 = MetarData.indexOf("</state", search0);
+    if (search1 > 0)   Station_name = Station_name + " " + MetarData.substring(search1 + 7, search2);
+  }
+  if (search1 > 0 && search2 > 0)   Station_name = Station_name + " " + MetarData.substring(search1 + 9, search2);
+  Stations[i] = Station_name.c_str();
 }
 
 
@@ -1673,7 +1674,7 @@ void Go_Server ( void * pvParameters ) {
                 }
 
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
-                  sta_n = 0;                  // ADD as Station[0], Can be set to overwrite other Station
+                  sta_n = 0;                  // ADD as Station[0], Can be set to Any Station For Troubleshooting
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
