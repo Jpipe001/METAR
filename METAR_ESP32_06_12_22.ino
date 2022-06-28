@@ -1428,7 +1428,7 @@ String Decode_Weather(String weather) {
   }
 
   // For Troubleshooting:
-  Serial.printf("\tRemarks\t\t.%s.\n", weather.c_str());
+  // Serial.printf("\tRemarks\t\t.%s.\n", weather.c_str());
 
   weather.replace(" $", "");                             // Clean Up ~ Station needs Maintenance
   weather.replace("[ <br>", "");                         // Clean Up
@@ -1441,7 +1441,7 @@ String Decode_Weather(String weather) {
   weather.replace("<br> ", "");                          // Clean Up
 
   // For Troubleshooting:
-  Serial.printf("\tFinal Remark\t.%s.\n\n", weather.c_str());
+  // Serial.printf("\tFinal Remark\t.%s.\n\n", weather.c_str());
 
   return weather;                  // Return with Readable Weather
 }
