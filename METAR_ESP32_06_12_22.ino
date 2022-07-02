@@ -1,4 +1,6 @@
-/*  06/26/2022
+/*
+     06/29/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
+
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
   https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.  ~  GOOD READ
@@ -104,7 +106,8 @@
   Modified Search 04/04/22
   Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
-  Changed Vis/Temp/Press Display Colors 06/26/22
+  Changed Vis/Temp/Press Display Colors a Little 06/26/22
+  Added Remarks to Summary Display 06/29/22
   Made things a Little better !!
 */
 
@@ -136,8 +139,11 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 //const char*      ssid = "your network name";          // your network SSID (name)
 //const char*  password = "your network password";      // your network password
 
-//const char*      ssid = "iPhone";          // your network SSID (name)
-//const char*  password = "johnjohn";        // your network password
+const char*      ssid = "iPhone";          // your network SSID (name)
+const char*  password = "johnjohn";        // your network password
+
+//const char*        ssid = "NETGEAR46";       // "Your Network SSID (Name)"
+//const char*    password = "icysea351";       // "Your Network Password"
 
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
@@ -224,24 +230,25 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
 
 //  ################   END OF SETTINGS  ################
 
-PROGMEM String StationMetar[No_Stations + 1];  // Station Metar
-PROGMEM String      Remark[No_Stations + 1];   // Remark
-PROGMEM String Sig_Weather[No_Stations + 1];   // Significant Weather
-PROGMEM float         temp[No_Stations + 1];   // Temperature deg C
-PROGMEM float        dewpt[No_Stations + 1];   // Dew point deg C
-PROGMEM String        Wind[No_Stations + 1];   // Wind speed
-PROGMEM String        wDir[No_Stations + 1];   // Wind direction
-PROGMEM int       old_wDir[No_Stations + 1];   // Old Wind direction
-PROGMEM float        visab[No_Stations + 1];   // Visibility
-PROGMEM String         Sky[No_Stations + 1];   // Sky_cover
-PROGMEM int new_cloud_base[No_Stations + 1];   // New Cloud Base
-PROGMEM int old_cloud_base[No_Stations + 1];   // Old Cloud Base
-PROGMEM float      seapres[No_Stations + 1];   // Sea Level Pressure
-PROGMEM float        altim[No_Stations + 1];   // Altimeter setting
-PROGMEM float    old_altim[No_Stations + 1];   // Old altimeter setting
-PROGMEM float    elevation[No_Stations + 1];   // Elevation setting
-PROGMEM String    Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
-//.............................................. Black  Green   Blue   Red   Magenta
+PROGMEM String  StationMetar[No_Stations + 1];   // Station Metar code including "new"
+PROGMEM String StationRemark[No_Stations + 1];   // Station Remark code including "brackets"
+PROGMEM String        Remark[No_Stations + 1];   // Final Remark for Station (text)
+PROGMEM String   Sig_Weather[No_Stations + 1];   // Significant Weather
+PROGMEM float           temp[No_Stations + 1];   // Temperature deg C
+PROGMEM float          dewpt[No_Stations + 1];   // Dew point deg C
+PROGMEM String          Wind[No_Stations + 1];   // Wind speed
+PROGMEM String          wDir[No_Stations + 1];   // Wind direction
+PROGMEM int         old_wDir[No_Stations + 1];   // Old Wind direction
+PROGMEM float          visab[No_Stations + 1];   // Visibility
+PROGMEM String           Sky[No_Stations + 1];   // Sky_cover
+PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
+PROGMEM int   old_cloud_base[No_Stations + 1];   // Old Cloud Base
+PROGMEM float        seapres[No_Stations + 1];   // Sea Level Pressure
+PROGMEM float          altim[No_Stations + 1];   // Altimeter setting
+PROGMEM float      old_altim[No_Stations + 1];   // Old altimeter setting
+PROGMEM float      elevation[No_Stations + 1];   // Elevation setting
+PROGMEM String      Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
+//................................................ Black  Green   Blue   Red   Magenta
 
 #define LED_BUILTIN 2         // ON Board LED GPIO 2
 PROGMEM String MetarData;     // Raw METAR data
@@ -280,7 +287,7 @@ void setup() {
 
   // Initialize the WiFi network settings.
   WiFi.begin(ssid, password);
-  
+
   // CONNECT to WiFi network:
   Serial.printf("WiFi Connecting to %s  ", ssid);
   int count = 0;
@@ -288,12 +295,9 @@ void setup() {
     delay(300);    // Wait a little bit
     Serial.printf(".");
     count++;
-    if (count > 100) {    // Loop for 100 tries
-      Serial.printf("\n ~ Can't Connect to Network\n");
-      return;
-    }
+    if (count > 100) break;    // Loop for 100 tries
   }
-  Serial.printf(" ~ Connected Successfully\n");
+  if (count > 100)   Serial.printf("\n ~ Can't Connect to Network\n"); else  Serial.printf(" ~ Connected Successfully\n");
 
   // Print the Signal Strength:
   long rssi = WiFi.RSSI() + 100;
@@ -360,17 +364,18 @@ void Main_Loop( void * pvParameters ) {
     while (Comms_Flag > 0) {    // Checking Communication Flag 1=Active
       delay(1000);
       count++;                  // loop for 100 seconds
-      if (count > 100)  return;
+      if (count > 100)  break;
     }
 
     Comms_Flag = 1;                  // Communication Flag 1=Active
     GetAllMetars();                  // Get All Metars and Display Categories
     Comms_Flag = 0;                  // Communication Flag 0=Reset
+    
     Serial.printf("%s\tMetar Data Updated\tNext Update in %d Mins\n", Clock, Count_Down);
 
     while (Count_Down > 0)    {
-      Display_Metar_LEDS ();          // Display Station Metar/Show Loops
-      Update_Time();                  // Update CurrentTime : Hour & Minute
+      Display_Metar_LEDS ();         // Display Station Metar/Show Loops
+      Update_Time();                 // Update CurrentTime : Hour & Minute
       Count_Down = Last_Up_Min + Update_Interval - Minute;
       if (Count_Down > Update_Interval)   Count_Down = 0;
     }
@@ -620,14 +625,21 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     if (search_End > search_Raw_Text)  search_End = search_Raw_Text;       // Something is Wrong : Use Default for Remark Start
 
 
-    // *** CREATE  Remark : Codes
-    String Code = Parsed_metar.substring(search_Strt, search_End);
+    // *** CREATE  Remark : Codes to Text
+    // StationMetar[i]    Station Metar Codes including "new" & "ago"
+    //StationRemark[i]    Station Remark Codes including "brackets"
+    //       Remark[i]    Station Remark Codes, Overwrites to Final Remark for Station (text)
+    String Metar_Code = Parsed_metar.substring(search_Strt, search_End);    // Station Metar code not including "new" "station" & "ago"
+
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
+    StationRemark[i] = Remark[i];    // Station Remark code including "brackets" above
 
     // For Troubleshooting : Print Parsed_metar
-    Serial.printf("Station No %d\t\t%s %s %s\n", i, station, Code.c_str(), Remark[i].c_str());
+    Serial.printf("Station No %d\t\t%s %s %s\n", i, station, Metar_Code.c_str(), StationRemark[i].c_str());
+
 
     // DECODING Remark  (Mainly REMOVE unwanted codes)
+
     //  **** REMOVE   AO   Automated Station
     int search2 = Remark[i].indexOf(" AO");
     int search3 = Remark[i].indexOf(" ", search2 + 1);
@@ -1328,10 +1340,10 @@ String Decode_Weather(String weather) {
 
   weather.replace("RainG", "Ragged ");
   weather.replace("TR", "Trace");
-  weather.replace("RE", "<br>Recent: ");
+  weather.replace("RE", "<br>Recent:");
 
   weather.replace("RF", "Rainfall ");
-  weather.replace("RMK", " Remark:");
+  weather.replace("RMK ", " Remark:");
 
   weather.replace("CB", " Cumulonimbus Clouds");
   weather.replace("CC", " Cirrocumulus Clouds");
@@ -1428,7 +1440,7 @@ String Decode_Weather(String weather) {
   }
 
   // For Troubleshooting:
-  // Serial.printf("\tRemarks\t\t.%s.\n", weather.c_str());
+  //Serial.printf("\tRemarks\t\t.%s.\n", weather.c_str());
 
   weather.replace(" $", "");                             // Clean Up ~ Station needs Maintenance
   weather.replace("[ <br>", "");                         // Clean Up
@@ -1441,7 +1453,7 @@ String Decode_Weather(String weather) {
   weather.replace("<br> ", "");                          // Clean Up
 
   // For Troubleshooting:
-  // Serial.printf("\tFinal Remark\t.%s.\n\n", weather.c_str());
+  //Serial.printf("\tFinal Remark\t.%s.\n\n", weather.c_str());
 
   return weather;                  // Return with Readable Weather
 }
@@ -1625,8 +1637,8 @@ void Go_Server ( void * pvParameters ) {
   String header;                  // Header for Server
   int sta_n = 1;
   byte wx_flag;
-  byte station_flag = 1;
-  byte summary_flag = 1;
+  byte Station_Flag = 1;
+  byte Summary_Flag = 1;
   float TempF;
   String html_code;
 
@@ -1674,39 +1686,40 @@ void Go_Server ( void * pvParameters ) {
                 }
 
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
-                  sta_n = 0;                  // ADD as Station[0], Can be set to Any Station For Troubleshooting
+                  sta_n = No_Stations;        // ADD as Stations[0], Can be set to Any Station For Troubleshooting
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
+                  StationRemark[sta_n] = "";
                   new_cloud_base[sta_n] = 0;
                   old_cloud_base[sta_n] = 0;
                   altim[sta_n] = 0;
                   old_altim[sta_n] = 0;
                   wDir[sta_n] = "";
 
-                  if (Comms_Flag > 0)Serial.printf("%s   WAITING to Get Station Metar  -  Comms In Use\n", Clock);
+                  if (Comms_Flag > 0)  Serial.printf("%s   WAITING to Get Station Metar for %s -  Comms In Use\n", Clock, Airport_Code);
                   int count = 0;
                   while (Comms_Flag > 0) {    // Checking Communication Flag 1=Active
                     delay(1000);
-                    count++;                  // loop for 100 seconds
-                    if (count > 100)  return;
+                    count++;
+                    if (count > 100)  break;  // loop for 100 seconds
                   }
-                  // Communication Flag - GetData is NOT running Communication Flag 0
+                  // Communication Flag - GetData is NOT running Communication Flag = 0
                   Comms_Flag = 1;             // Set Communication Flag 1=Active
 
-                  GetData("NAME", sta_n);    // GET Some Metar /NAME
-                  Decode_Name(sta_n);        // Decode Station NAME
-                  GetData(Airport_Code, sta_n); // GET Some Metar /DATA
-                  ParseMetar(sta_n);        // Parse Metar DATA
+                  GetData("NAME", sta_n);     // GET Some Metar ~ Station NAME
+                  Decode_Name(sta_n);         // Decode Station NAME
+                  GetData(Airport_Code, sta_n); // GET Some Metar ~ Station DATA
+                  ParseMetar(sta_n);          // Parse Metar DATA
 
-                  Comms_Flag = 0;           // Set Communication Flag 0=Reset
+                  Comms_Flag = 0;             // Set Communication Flag 0=Reset
 
                   if (Category[sta_n] == "NF")   {   // Checking for Error in Station Name
                     StationMetar[sta_n] = Airport_Code + " : Error in Station Name or NA";
                   }
                 }
-                summary_flag = 0;
-                station_flag = 1;
+                Summary_Flag = 0;
+                Station_Flag = 1;
               }
 
               // Checking which BUTTON was Pressed
@@ -1716,8 +1729,8 @@ void Go_Server ( void * pvParameters ) {
                 if (sta_n < 0)  sta_n = No_Stations;
                 if (Stations[sta_n].substring(0, 4) == "NULL")   sta_n = sta_n - 1;
                 if (sta_n < 0)  sta_n = No_Stations;
-                summary_flag = 0;
-                station_flag = 1;
+                Summary_Flag = 0;
+                Station_Flag = 1;
               }
               search = header.indexOf("GET /next HTTP/1.1");
               if (search >= 0) {             // From Display Station NEXT Button
@@ -1725,24 +1738,24 @@ void Go_Server ( void * pvParameters ) {
                 if (sta_n > No_Stations) sta_n = 0;
                 if (Stations[sta_n].substring(0, 4) == "NULL")   sta_n = sta_n + 1;
                 if (sta_n > No_Stations) sta_n = 0;
-                summary_flag = 0;
-                station_flag = 1;
+                Summary_Flag = 0;
+                Station_Flag = 1;
               }
               search = header.indexOf("GET /flash HTTP/1.1");
               if (search >= 0) {
                 sta_n = Station_Num;             // From Display Station FLASH Button
                 if (sta_n < 1 || sta_n > No_Stations)  sta_n = 1;
-                summary_flag = 0;
-                station_flag = 1;
+                Summary_Flag = 0;
+                Station_Flag = 1;
               }
               search = header.indexOf("GET /summary HTTP/1.1");
               if (search >= 0) {             // From Display Station SUMMARY Button
-                summary_flag = 1;
-                station_flag = 1;
+                Summary_Flag = 1;
+                Station_Flag = 1;
               }
 
 
-              if (summary_flag == 1)  {
+              if (Summary_Flag == 1)  {
                 // *********** DISPLAY SUMMARY ***********
                 // Display the HTML web page responsive in any web browser, Page Header, Title, Style & Page Body
                 html_code = "<!DOCTYPE html><html><HEAD><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
@@ -1833,9 +1846,9 @@ void Go_Server ( void * pvParameters ) {
                       if (altim[i] <= old_altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
                       if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(altim[i]));
                       else  client.print(color + String(altim[i]));
-                      if (altim[i] > old_altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); //up arrow
-                      if (altim[i] < old_altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); //down arrow
-                      if (altim[i] == old_altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); //right arrow
+                      if (altim[i] > old_altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
+                      if (altim[i] < old_altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
+                      if (altim[i] == old_altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
                     }  else  {
                       client.print(color + String(altim[i]));
                     }
@@ -1846,13 +1859,13 @@ void Go_Server ( void * pvParameters ) {
                     client.print(StationMetar[i]);
 
                     // Display Remark in SUMMARY
-                    if (Remark[i].length() > 1)   client.print("<BR><FONT COLOR='Navy'>Remark Available</FONT></TD></TR>");  else  client.print("</FONT></TD></TR>");
+                    if (StationRemark[i].length() > 3)   client.print("<BR><FONT COLOR='Navy'>RMK:" + String(StationRemark[i]) + "</FONT></TD></TR>");  else  client.print("</FONT></TD></TR>");
                   }
                 }
                 client.print(F("</TABLE>"));
               }
 
-              if (station_flag == 1)  {
+              if (Station_Flag == 1)  {
 
                 // *********** DISPLAY STATION  ***********
                 html_code = "<!DOCTYPE html><html><HEAD><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
@@ -1860,7 +1873,7 @@ void Go_Server ( void * pvParameters ) {
                 html_code += "<STYLE> html { FONT-family: Helvetica; display: inline-block; margin: 0px auto; text-align: left;}</STYLE></HEAD>";
                 html_code += "<BODY><h2>METAR for Station:</h2>";
 
-                if (station_flag == 1 || summary_flag == 1)  {
+                if (Station_Flag == 1 || Summary_Flag == 1)  {
                   html_code += "<P>For&nbsp:&nbsp" +  Stations[sta_n] + "&nbsp&nbsp#&nbsp&nbsp" + String(sta_n) + "<BR>";
 
                   // Display BUTTONS: Makes a request in the header ("GET /back HTTP/1.1")
