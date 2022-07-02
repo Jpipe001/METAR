@@ -142,9 +142,6 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 const char*      ssid = "iPhone";          // your network SSID (name)
 const char*  password = "johnjohn";        // your network password
 
-//const char*        ssid = "NETGEAR46";       // "Your Network SSID (Name)"
-//const char*    password = "icysea351";       // "Your Network Password"
-
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;                // UTC Time : Time Zone 60*60*0 Hrs
