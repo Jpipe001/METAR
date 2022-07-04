@@ -1689,7 +1689,7 @@ void Go_Server ( void * pvParameters ) {
                 }
 
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
-                  sta_n = No_Stations;        // ADD as Stations[0], Can be set to Any Station For Troubleshooting
+                  sta_n = 0;                 // ADD as Stations[0], Can be set to Any Station For Troubleshooting
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
