@@ -1,5 +1,5 @@
 /*
-  07/04/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
+  07/07/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -108,7 +108,7 @@
   Changed to Printf  06/12/22
   Changed Vis/Temp/Press Display Colors a Little 06/26/22
   Added Remarks to Summary Display 06/29/22
-  ENTERED AIRPORT CODE ~ Can be set to Any Station 07/04/22
+  ENTERED Station Can be set to Any Station 07/04/22
   Made things a Little better !!
 */
 
@@ -136,7 +136,7 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
-// Configure Network
+// Configure Network Settings:
 const char*      ssid = "your network name";          // your network SSID (name)
 const char*  password = "your network password";      // your network password
 
@@ -165,12 +165,12 @@ CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB
 std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this line
   "NULL, STATION NAME         ",        // 0 << Reserved - Do NOT change this line
   "KCHA, CHATTANOOGA, TN      ",        // 1 << START modifying from here
-  "KRMG, ROME, GA             ",        // 2  Order of LEDs; NULL for no airport
+  "KRMG, ROME, GA             ",        // 2  Order of LEDs; NULL for no airport or LED
   "KVPC, CARTERSVILLE, GA     ",        // 3
   "KATL, ATLANTA, GA          ",        // 4  First FIVE Characters are REQUIRED !!
   "KCTJ, CARROLTON, GA        ",        // 5
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station name
-  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas"
+  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas" (Important).
   "KMCN, MACON, GA            ",        // 8  Padding after station name is not necessary.
   "KCKF, CORDELLE, GA         ",        // 9
   "KABY, ALBANY, GA           ",        // 10 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
@@ -250,7 +250,7 @@ PROGMEM String      Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    
 
 #define LED_BUILTIN 2         // ON Board LED GPIO 2
 PROGMEM String MetarData;     // Raw METAR data
-String Clock;                 // Clock  "HH:MM"
+char Clock[] = "HH:MM";       // Clock  "HH:MM"
 byte Hour;                    // Latest Hour
 byte Minute;                  // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
@@ -281,7 +281,7 @@ void setup() {
   Serial.printf("Date Compiled ~ %s\n\n", __DATE__);
 
   Init_LEDS();         // Initialize LEDs
-  if (String(ssid) == "iPhone")  Serial.printf("** If DOESN'T Connect:  Select HOT SPOT on iPhone **\n");
+  if (String(ssid) == "iPhone")  Serial.printf("**  If DOESN'T Connect:  Check HOT SPOT & WiFi ON on iPhone  **\n");
 
   // Initialize the WiFi network settings.
   WiFi.begin(ssid, password);
@@ -295,7 +295,7 @@ void setup() {
     count++;
     if (count > 100) break;    // Loop for 100 tries
   }
-  if (count > 100)   Serial.printf("\n ~ Can't Connect to Network\n"); else  Serial.printf(" ~ Connected Successfully\n");
+  if (count > 100)   Serial.printf("\n ~ Can't Connect to Network\n\n"); else  Serial.printf(" ~ Connected Successfully\n");
 
   // Print the Signal Strength:
   long rssi = WiFi.RSSI() + 100;
@@ -307,26 +307,25 @@ void setup() {
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(ssid, password);
 
-  if (!MDNS.begin(ServerName)) {     // Start mDNS with ServerName
-    Serial.printf("Error setting up MDNS responder!\n");
+  if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
+    Serial.printf("Error setting up MDNS responder!\nProgram halted  ~  Check Network Settings\n");
     while (1) {
       delay(1000);                   // Stay here
     }
   }
-  
+
   HW_addr = "http://" + WiFi.localIP().toString();      // IP Address
-  Serial.println("\n\t\tUse IP Address \t: " + HW_addr);
-  
+  Serial.printf("\n\t\tUse IP Address \t: %s\n", HW_addr.c_str());
+
   SW_addr = "http://" + String(ServerName) + ".local";  // Logical Address
-  Serial.println("MDNS started ~\tOr Use Address \t: " + SW_addr);
+  Serial.printf("MDNS started ~\tOr Use Address \t: %s\n", SW_addr.c_str());
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);   // Get UTC Time from Server
   Update_Time();          // Set Up Time : Hour & Minute
 
   char TimeChar[50];
-  int Time_Char_Len = strftime(TimeChar, sizeof(TimeChar), "%A, %B %d %Y %H:%M - UTC", &timeinfo);
-  Serial.printf("Date & Time \t: %s\n", TimeChar);
-  //Serial.printf("Time_Char_Len \t: %d\n", Time_Char_Len);     // To Check Actual size of Custom_Time String
+  strftime(TimeChar, sizeof(TimeChar), "%A, %B %d %Y %H:%M - UTC", &timeinfo);
+  Serial.printf("Date & Time :\t%s\n\n", TimeChar);
 
   //Task1 = Main_Loop() function, with priority 1 and executed on core 0 for Getting Data and Display Leds
   xTaskCreatePinnedToCore( Main_Loop, "Task1", 10000, NULL, 1, &Task1, 0);
@@ -368,7 +367,7 @@ void Main_Loop( void * pvParameters ) {
         if (count > 100)  break;
       }
     }
-    
+    delay(200);                      // Wait a smidgen
     Comms_Flag = 1;                  // Communication Flag 1=Active
     GetAllMetars();                  // Get All Metars and Display Categories
     Comms_Flag = 0;                  // Communication Flag 0=Reset
@@ -408,9 +407,10 @@ void Update_Time() {
   }
   char TimeChar[6];
   strftime(TimeChar, sizeof(TimeChar), "%H:%M", &timeinfo);
-  Clock  = TimeChar;                       // String  "HH:MM"
-  Hour   = Clock.substring(0, 2).toInt();  // Byte     HH
-  Minute = Clock.substring(3, 5).toInt();  // Byte     MM
+  strcpy(Clock, TimeChar);
+  String Time = TimeChar;                     // String  "HH:MM"
+  Hour   = Time.substring(0, 2).toInt();      // Byte     HH
+  Minute = Time.substring(3, 5).toInt();      // Byte     MM
 }
 
 
@@ -476,24 +476,27 @@ void GetData(String url, byte i) {
         MetarData = https.getString();
       } else {
         //  httpCode may still have positive Error so Double Check
-        Serial.println("In GetData #" + String(i) + "\tDouble Check for Error\t= " + String(httpCode) + " : " + https.errorToString(httpCode).c_str());
+        Serial.printf("\tIn GetData No: %d", i);
+        Serial.printf("\tDouble Check for Error = %d : %s\n", httpCode, https.errorToString(httpCode));
+
       }
       https.end();                     // Communication HTTP_CODE_OK
       digitalWrite(LED_BUILTIN, LOW);  //OFF
 
       // For Troubleshooting : Check What is the size of MetarData
-      //Serial.println("In GetData #" + String(i) + "\tMetarData Size\t= " + String(MetarData.length()));
+      //Serial.printf("\tIn GetData  No: %d\tMetarData Size  = %d\n", i, MetarData.length());
 
     } else {
       https.end();                     // Communication HTTP Error
       digitalWrite(LED_BUILTIN, LOW);  //OFF
-      Serial.println(Clock + "\tNo:" + String(i) + "\t\tCommunication Error in GetData = " + String(httpCode) + " : " + https.errorToString(httpCode).c_str());
+      Serial.printf("%s\tNo: %d \tCommunication Error in GetData = ", Clock, i);
+      Serial.printf("%d : %s \n", httpCode, https.errorToString(httpCode));
+
       //Communication Error httpCode = -11 : read Timeout DON'T Print
       if (httpCode != -11)  {
-        Serial.println("In GetData : url = " + url);
+        Serial.printf("In GetData : url = %s\n", url.c_str());
         Network_Status ();              // WiFi Network Error
-        Serial.println("In GetData : MetarData=\n" + String(MetarData));
-        //StationMetar[i] = https.errorToString(httpCode).c_str();
+        //Serial.printf("In GetData : \nMetarData = %s\n", MetarData.c_str());
       }
     }
   } else {
@@ -506,13 +509,13 @@ void GetData(String url, byte i) {
 // ***********   WiFi Network Error
 void Network_Status () {
   Serial.printf("%s\t\tWiFi Network Status: ", Clock);
-  if (WiFi.status() == 0 ) Serial.printf("= 0 Idle");
-  if (WiFi.status() == 1 ) Serial.printf("= 1 Not Available, SSID can not be reached");
-  if (WiFi.status() == 2 ) Serial.printf("= 2 Scan Completed");
-  if (WiFi.status() == 3 ) Serial.printf("= 3 Connected");
-  if (WiFi.status() == 4 ) Serial.printf("= 4 Failed, password incorrect");
-  if (WiFi.status() == 5 ) Serial.printf("= 5 Connection Lost");
-  if (WiFi.status() == 6 ) Serial.printf("= 6 Disconnected");
+  if (WiFi.status() == 0 ) Serial.printf("= 0 ~ Idle");
+  if (WiFi.status() == 1 ) Serial.printf("= 1 ~ Not Available, SSID can not be reached");
+  if (WiFi.status() == 2 ) Serial.printf("= 2 ~ Scan Completed");
+  if (WiFi.status() == 3 ) Serial.printf("= 3 ~ Connected");
+  if (WiFi.status() == 4 ) Serial.printf("= 4 ~ Failed, password incorrect");
+  if (WiFi.status() == 5 ) Serial.printf("= 5 ~ Connection Lost");
+  if (WiFi.status() == 6 ) Serial.printf("= 6 ~ Disconnected");
   Serial.printf("\n");
 }
 
@@ -536,19 +539,16 @@ void ParseMetar(byte i) {
     // Station NOT found or NOT reporting
     //Communication Error httpCode = -11 : read Timeout DON'T Print
     if (httpCode != -11)   {
-      Serial.printf("%s\tNo:%d\t\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station);
-      if (Data_End < 0 )
-        Serial.printf("\tIn ParseMetar:  Data_Start=%d  Data_End=%d\n", Data_Start, Data_End);
+      Serial.printf("%s\tNo:%d\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station.c_str());
       if (Data_Start < 0 && Data_End < 0 )
-        Serial.printf("\tLikely Communication or Station Code Error\n");
-      //Serial.println("MetarData=\n" + MetarData.substring(0, MetarData.length()));
+        Serial.printf("\t\tLikely Communication or Station Code Error\n");
     }
 
     //Reset All Parameters if Not Found
     Category[i] = "NF";             // Not Found
     Sky[i] = "NA";                  // Not Found
     StationMetar[i] = "Station Not Reporting";
-    StationRemark[i] ="";
+    StationRemark[i] = "";
     if (httpCode != HTTP_CODE_OK)  StationMetar[i] = "Internet Connection Error";
     Sig_Weather[i] = "Not Found";   // Not Found
     visab[i] = 0;                   // Not Found
@@ -575,7 +575,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
   int search_Strt = Parsed_metar.indexOf(station, 0) + 7;                 // Start of search
   int search_Raw_Text = Parsed_metar.indexOf("</raw_text", search_Strt);  // End of Remark - "</raw_text"
   if (search_Strt < 7)  {
-    Serial.printf("%s\tNo:%d\t%s\tFailed in Decodedata search_Strt= %d\n", Clock, i, station, search_Strt);
+    Serial.printf("%s\tNo:%d\t%s\tFailed in Decodedata search_Strt= %d\n", Clock, i, station.c_str(), search_Strt);
     return;
   }
 
@@ -638,7 +638,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     StationRemark[i] = Remark[i];    // Station Remark code including "brackets" above
 
     // For Troubleshooting : Print Parsed_metar
-    Serial.printf("Station No %d\t\t%s %s %s\n", i, station, Metar_Code.c_str(), StationRemark[i].c_str());
+    //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), StationRemark[i].c_str());
 
 
     // DECODING Remark  (Mainly REMOVE unwanted codes)
@@ -999,7 +999,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     // Searching temp_c        temp[i] = deg C
     search0 = Parsed_metar.indexOf("<temp_c") + 8;
     search1 = Parsed_metar.indexOf("</temp");
-    if (search0 < 8)   Serial.printf("%s\tNo:%d\t\t%s\tTemperature Not Found, in Decodedata\n", Clock, i, station);
+    if (search0 < 8)   Serial.printf("%s\tNo:%d\t%s\tTemperature Not Found, in Decodedata\n", Clock, i, station.c_str());
     if (search0 < 8) temp[i] = 0;  else  temp[i] = Parsed_metar.substring(search0, search1).toFloat() + 0.001;
     //float TempF = temp[i] * 1.8 + 32;            // deg F
 
@@ -1014,7 +1014,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     search1 = Parsed_metar.indexOf("</wind_dir_degree");
     if (search0 < 17) wDir[i] = "NA";  else  wDir[i] = Parsed_metar.substring(search0, search1);
     if (StationMetar[i].indexOf("VRB") > 0) wDir[i] = "VRB";
-    if (wDir[i] == "NA")   Serial.printf("%s\tNo:%d\t\t%s\tWind Dir Not Found, in Decodedata\n", Clock, i, station);
+    if (wDir[i] == "NA")   Serial.printf("%s\tNo:%d\t%s\tWind Dir Not Found, in Decodedata\n", Clock, i, station.c_str());
 
     // Searching Wind_speed_kt
     search0 = Parsed_metar.indexOf("wind_speed_kt") + 14;
@@ -1059,7 +1059,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     old_altim[i] = altim[i];
     search0 = Parsed_metar.indexOf("<altim_in_hg>") + 13;
     search1 = Parsed_metar.indexOf("</altim_in_hg>");
-    if (search0 < 13)  Serial.printf("%s\tNo:%d\t\t%s\tAltimeter Not Found, in Decodedata\n", Clock, i, station);
+    if (search0 < 13)  Serial.printf("%s\tNo:%d\t%s\tAltimeter Not Found, in Decodedata\n", Clock, i, station.c_str());
     if (search0 < 13) altim[i] = 0;  else  altim[i] = Parsed_metar.substring(search0, search1).toFloat();
     //    float Pressure = altim[i]; // in_hg
 
@@ -1565,8 +1565,8 @@ void Set_Cat_LED (byte i)  {
 // *********** Display Visibility [Red White]
 void Display_Vis_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue     = 10  + visab[i] * 4;       // (red white) [ 10 - 50 ]
-    byte sat     = 180 - visab[i] * 18;      // (red white) [ 0 - 180 ]
+    byte hue     = 10  + visab[i] * 4;       // (red white) [ 10 ~ 50 ]
+    byte sat     = 180 - visab[i] * 18;      // (red white) [ 0 ~ 180 ]
     byte bright  = 120;                      // [ <100=Dim  120=ok  >160=Too Bright/Much Power ]
     leds[i - 1] = CHSV(hue, sat, bright);    // ( hue, sat, bright )
     if (visab[i] > 9)   leds[i - 1] = CHSV( 45, 0, bright); // White
@@ -1592,7 +1592,7 @@ void Display_Wind_LEDS (int wait) {
 // *********** Display Temperatures [Blue Green Yellow Orange Red]
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = 160 - temp[i] * 4;         //  purple blue green yellow orange red
+    byte hue = 160 - temp[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
     leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
     if (temp[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
@@ -1604,7 +1604,7 @@ void Display_Temp_LEDS (int wait) {
 // *********** Display Altimeter Pressure [Blue Purple]
 void Display_Alt_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = (altim[i] - 29.92) * 100;        //  (normally) blue purple [ 70 - 270 ]
+    byte hue = (altim[i] - 29.92) * 100;        //  (normally) blue purple [ 70 ~ 270 ]
     leds[i - 1] = CHSV( hue + 170, 180, 150);   // ( hue, sat, bright )
     if (altim[i] == 0 || Category[i].substring(0, 1) == "NF")   leds[i - 1] = CHSV( 0, 0, 0);
   }
@@ -1673,7 +1673,6 @@ void Go_Server ( void * pvParameters ) {
               html_code += "Content-type:text/html";
               html_code += "Connection: close";
               client.println(html_code);
-              //client.print(F("Refresh: 60"));  // Refresh the page automatically every 60 sec
               client.println();                  // Send  a blank line
 
 
@@ -1689,7 +1688,7 @@ void Go_Server ( void * pvParameters ) {
                 }
 
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
-                  sta_n = 0;                 // ADD as Stations[0], Can be set to Any Station For Troubleshooting
+                  sta_n = No_Stations;        // ADD as Stations[0], Can be set to Any Station For Troubleshooting
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
@@ -1701,7 +1700,7 @@ void Go_Server ( void * pvParameters ) {
                   wDir[sta_n] = "";
 
                   if (Comms_Flag > 0)  {
-                    Serial.printf("%s   WAITING to Get Station Metar for %s -  Comms In Use\n", Clock, Airport_Code);
+                    Serial.printf("%s   WAITING to Get Station Metar for %s -  Comms In Use\n", Clock, Airport_Code.c_str());
                     int count = 0;
                     while (Comms_Flag > 0) {    // Checking Communication Flag 1=Active
                       delay(1000);
@@ -1710,6 +1709,7 @@ void Go_Server ( void * pvParameters ) {
                     }
                   }
                   // Communication Flag - GetData is NOT running Communication Flag = 0
+                  delay(200);                 // Wait a smidgen
                   Comms_Flag = 1;             // Set Communication Flag 1=Active
 
                   GetData("NAME", sta_n);     // GET Some Metar ~ Station NAME
@@ -1905,7 +1905,7 @@ void Go_Server ( void * pvParameters ) {
                   Count_Down = Last_Up_Min + Update_Interval - Minute;
                   if (Count_Down > Update_Interval)   Count_Down = 0;
 
-                  String CountDown_Time = "Current Time : " + Clock + " UTC&nbsp&nbsp&nbsp&nbsp&nbsp&nbspNext Update in less than 0 Minutes<BR>";
+                  String CountDown_Time = "Current Time : " + String(Clock) + " UTC&nbsp&nbsp&nbsp&nbsp&nbsp&nbspNext Update in less than 0 Minutes<BR>";
                   CountDown_Time.replace("than 0", "than " + String(Count_Down));
                   if (Count_Down == 1)  CountDown_Time.replace("Minutes", "Minute");
                   client.print(CountDown_Time);
