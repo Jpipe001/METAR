@@ -140,7 +140,7 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 const char*      ssid = "your network name";          // your network SSID (name)
 const char*  password = "your network password";      // your network password
 
-//const char*      ssid = "iPhone";          // your network SSID (name)
+//const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
 
 // Set Up Time Server
@@ -170,7 +170,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KATL, ATLANTA, GA          ",        // 4  First FIVE Characters are REQUIRED !!
   "KCTJ, CARROLTON, GA        ",        // 5
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station name
-  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas" (Important).
+  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas" (Syntax Important).
   "KMCN, MACON, GA            ",        // 8  Padding after station name is not necessary.
   "KCKF, CORDELLE, GA         ",        // 9
   "KABY, ALBANY, GA           ",        // 10 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
@@ -281,7 +281,7 @@ void setup() {
   Serial.printf("Date Compiled ~ %s\n\n", __DATE__);
 
   Init_LEDS();         // Initialize LEDs
-  if (String(ssid) == "iPhone")  Serial.printf("**  If DOESN'T Connect:  Check HOT SPOT & WiFi ON on iPhone  **\n");
+  if (String(ssid) == "iPhone")  Serial.printf("**  If iPhone DOESN'T Connect:  Check WiFi ~ ON & Select HOT SPOT on iPhone  **\n");
 
   // Initialize the WiFi network settings.
   WiFi.begin(ssid, password);
@@ -302,17 +302,18 @@ void setup() {
   Serial.printf("Signal Strength = %ld", rssi);
   if (rssi > 50)  Serial.printf(" (>50 - Good)\n");  else   Serial.printf(" (Could be Better)\n");
   Serial.printf("*******************************************\n");
-  Serial.printf("To View Decoded Station METARs from a Computer or \nCell Phone connected to the %s WiFi Network.\n", ssid);
 
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(ssid, password);
 
   if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
-    Serial.printf("Error setting up MDNS responder!\nProgram halted  ~  Check Network Settings\n");
+    Serial.printf("\nError setting up MDNS responder!\nProgram halted  ~  Check Network Settings!!\n");
     while (1) {
       delay(1000);                   // Stay here
     }
   }
+  
+  Serial.printf("To View Decoded Station METARs from a Computer or \nCell Phone connected to the %s WiFi Network.\n", ssid);
 
   HW_addr = "http://" + WiFi.localIP().toString();      // IP Address
   Serial.printf("\n\t\tUse IP Address \t: %s\n", HW_addr.c_str());
@@ -477,7 +478,7 @@ void GetData(String url, byte i) {
       } else {
         //  httpCode may still have positive Error so Double Check
         Serial.printf("\tIn GetData No: %d", i);
-        Serial.printf("\tDouble Check for Error = %d : %s\n", httpCode, https.errorToString(httpCode));
+        Serial.printf("\tDouble Check for Error = %d : %s\n", httpCode, https.errorToString(httpCode).c_str());
 
       }
       https.end();                     // Communication HTTP_CODE_OK
@@ -489,13 +490,14 @@ void GetData(String url, byte i) {
     } else {
       https.end();                     // Communication HTTP Error
       digitalWrite(LED_BUILTIN, LOW);  //OFF
-      Serial.printf("%s\tNo: %d \tCommunication Error in GetData = ", Clock, i);
-      Serial.printf("%d : %s \n", httpCode, https.errorToString(httpCode));
+      Serial.printf("%s\tNo:%d \tCommunication Error in GetData = ", Clock, i);
+      Serial.printf("%d : %s \n", httpCode, https.errorToString(httpCode).c_str());
 
       //Communication Error httpCode = -11 : read Timeout DON'T Print
       if (httpCode != -11)  {
-        Serial.printf("In GetData : url = %s\n", url.c_str());
         Network_Status ();              // WiFi Network Error
+        // For Troubleshooting
+        //Serial.printf("In GetData : url = %s\n", url.c_str());
         //Serial.printf("In GetData : \nMetarData = %s\n", MetarData.c_str());
       }
     }
@@ -637,7 +639,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
     StationRemark[i] = Remark[i];    // Station Remark code including "brackets" above
 
-    // For Troubleshooting : Print Parsed_metar
+    // ***  OPTIONAL  ***  To print UPDATED Stations or For Troubleshooting : Print Parsed_metar
     //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), StationRemark[i].c_str());
 
 
@@ -765,8 +767,8 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     search2 = Remark[i].lastIndexOf(" 20");                      // Positive
     if (search2 < 0)    search2 = Remark[i].lastIndexOf(" 21");  // Negative
     search3 = Remark[i].indexOf(" ", search2 + 1);
-    int search1 = Remark[i].indexOf("FT", search2 + 1);                   // Check for 200FT Density Alt
-    if (search1 == -1)  search1 = Remark[i].indexOf("V", search2 + 1);    // Check for Visability
+    int search1 = Remark[i].indexOf("FT", search2 + 1);                   // Check for NOT 200FT Density Alt
+    if (search1 == -1)  search1 = Remark[i].indexOf("V", search2 + 1);    // Check for NOT Visability
     if (search1 > 0 && search1 < search3)  search2 = -1;                  // If 200FT or VIS
     if (search3 - search2 != 6)  search3 = -1;                   // Check for length
 
@@ -781,8 +783,8 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     //  ****  REMOVE   3PPPP  Air Pressure at station level in hPa
     search2 = Remark[i].lastIndexOf(" 3");
     search3 = Remark[i].indexOf(" ", search2 + 1);
-    search1 = Remark[i].indexOf("FT", search2 + 1);                       // Check for 300FT Density Alt
-    if (search1 == -1)  search1 = Remark[i].indexOf("V", search2 + 1);    // Check for Visability
+    search1 = Remark[i].indexOf("FT", search2 + 1);                       // NOT 300FT Density Alt
+    if (search1 == -1)  search1 = Remark[i].indexOf("V", search2 + 1);    // NOT Visability
     if (search1 > 0 && search1 < search3)  search2 = -1;                  // If 300FT or VIS
     if (search3 - search2 != 6)  search3 = -1;                            // Check for length
 
@@ -1688,7 +1690,8 @@ void Go_Server ( void * pvParameters ) {
                 }
 
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
-                  sta_n = No_Stations;        // ADD as Stations[0], Can be set to Any Station For Troubleshooting
+                  sta_n = No_Stations;        // Can be set to Any Station For Troubleshooting (Set to overwrite last station)
+                  //sta_n = 0;                // Normally Set to sta_n = 0; : ADD as Stations[0]
                   Stations[sta_n] = Airport_Code.c_str();
                   Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
