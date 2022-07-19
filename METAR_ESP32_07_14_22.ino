@@ -1,5 +1,5 @@
 /*
-  07/14/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
+  07/19/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -65,40 +65,8 @@
   Includes: Decoded Metar, Current UTC Time, Temperature in Deg F, Elevation Ft, Estimated Density Altitude Ft.
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
-  Modified Significant Weather to include Cloud Cover, RVR & Weather 12/31/19
-  Changed to a TIMED 6 Minute METAR read and update 01/07
-  Added for Ice and Hail (Blue) 01/30
-  Added Capability to select ANY Airport Code 02/02
-  Added Summary to HTML 03/04
-  Cleaned up Update_Time & loop 03/08
-  Added User 03/10
-  Added Cloud_base Change Arrows 03/13
-  Added Alt Pressure Change Arrows 03/13
-  Added Yellow Misc Weather 03/24
-  Added Observation Time 04/01
-  Added Orange Info Changes 04/05
-  Cleaned up Parse_Metar 04/14
-  Added Wind Changes 04/30
-  Added Pressure Display 05/06
-  Modified Visibility Display 05/15
-  Modified Variable Types 05/15
-  Tweaked Rainbow Displays 05/21
-  Dual Core: Main_Loop Task1 Core0; Go_Server Task2 Core1 05/24
-  Modified Server Update Time 05/30
-  More little tweaks 06/01
-  Messing with memory storage 06/15
-  Modified to HTTPS 06/23
-  REMOVED from remark "Welcome User" 07/11
-  Modified the URL address 10/03
-  Changed Temperature Display Colors 10/29
-  Logical Address to the server with http://metar.local/ 10/29/20
-  Added Remarks 02/11/21
-  Modified Dictionary 04/14/21
-  Modified HTML 04/29/21
-  Fixed rem pointer error 05/18/21
-  Removed Flashing Sig Weather 07/12/21
-  Added debug print of remarks 07/30/21
-  More Readable, Modified Dictionary 08/27/21
+  //  RECENT CHANGES:
+
   More Reliable, More Modified Dictionary 01/19/22
   Modified to Summary Page to Jump to a Station 03/2/22
   Few minor Tweaks 03/11/22
@@ -108,9 +76,9 @@
   Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
   Changed Vis/Temp/Press Display Colors a Little 06/26/22
-  Added Remarks to Summary Display 06/29/22
+  Added "Remarks" to Summary Display 06/29/22
   ENTERED Station Can be set to Any Station 07/04/22
-  Made things a Little better !!
+  Made things a Little better !! 07/19/22
 */
 
 //#include <Arduino.h>
@@ -137,8 +105,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network Settings:
-//const char*      ssid = "your network name";          // your network SSID (name)
-//const char*  password = "your network password";      // your network password
+const char*      ssid = "your network name";          // your network SSID (name)
+const char*  password = "your network password";      // your network password
 
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
@@ -305,7 +273,7 @@ void setup() {
   wifiMulti.addAP(ssid, password);
 
   if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
-    Serial.printf("\nError setting up MDNS responder!\nProgram halted  ~  Check Network Settings!!\n");
+    Serial.printf("\nSOMETHING WENT WRONG\nError setting up MDNS responder!\nProgram halted  ~  Check Network Settings!!\n");
     while (1) {
       delay(1000);                   // Stay here
     }
@@ -1189,7 +1157,7 @@ String Decode_Weather(String weather) {
   weather.replace("CLD", "Clouds");
   weather.replace("EMBD", "mbedded");                 // Rename Later
   weather.replace("EMBED", "mbedded");                // Rename Later
-  weather.replace("BINOVC", " KN in OC ");            // Rename Later
+  weather.replace("BINOVC", " KN in OC");             // Rename Later
 
   weather.replace("OCNL LTG", "OCNLLTG");
   weather.replace("OCNL LT", "OCNLLTG");
@@ -1219,7 +1187,7 @@ String Decode_Weather(String weather) {
   weather.replace("LTG", " Lightning");
   weather.replace("LTinC", "in Clouds");
   weather.replace("LTtoG", "to Ground");
-  weather.replace("CA", "and Cloud to Air");
+  weather.replace("CA", " and Cloud to Air");
 
   weather.replace("ALQDS", "All Quadrents");
   weather.replace("ALQS", "All Quadrents");
@@ -1283,7 +1251,6 @@ String Decode_Weather(String weather) {
   weather.replace("DSPT", "Dissipated");
   weather.replace("HVY", "Heavy");
   weather.replace("LGT", "Light");
-  weather.replace("BLACK", "black:  ");              // Rename Later
 
   weather.replace("OHD", "oerhead");                 // Rename Later
   weather.replace("OVD", "oerhead");                 // Rename Later
@@ -1306,6 +1273,7 @@ String Decode_Weather(String weather) {
   weather.replace("YLO", "ylo");                     // See Military Later
   weather.replace("AMB", "amb");                     // See Military Later
   weather.replace("RED", "redd");                    // See Military Later
+  weather.replace("BLACK", "black");                 // See Military Later
 
   weather.replace("BC", " Patches of ");
   weather.replace("BL", " blowing ");                // Rename Later
@@ -1378,13 +1346,16 @@ String Decode_Weather(String weather) {
   weather.replace("ylo ylo", "ylo");                   // Military
   weather.replace("amb amb", "amb");                   // Military
   weather.replace("redd redd", "redd");                // Military
-  weather.replace("blu", "BLUE: Cloud Base >2500ft Visibility >8km ");
-  weather.replace("wht", "WHITE: Cloud Base >1500ft Visibility >5km ");
-  weather.replace("grn", "GREEN: Cloud Base >700ft Visibility >3.7km ");
-  weather.replace("ylo", "YELLOW: Cloud Base >300ft Visibility >1600m ");
-  weather.replace("amb", "AMBER: Cloud Base >200ft Visibility >800m ");
-  weather.replace("redd", "RED: Cloud Base <200ft Visibility <800m ");
-
+  weather.replace("blu", "BLUE: Cloud Base >2500ft Visibility >8km<br>");
+  weather.replace("wht", "WHITE: Cloud Base >1500ft Visibility >5km<br>");
+  weather.replace("grn", "GREEN: Cloud Base >700ft Visibility >3.7km<br>");
+  weather.replace("ylo1", "YELLOW: Cloud Base >500ft Visibility >2500m<br>");
+  weather.replace("ylo2", "YELLOW: Cloud Base >300ft Visibility >1600m<br>");
+  weather.replace("ylo", "YELLOW: Cloud Base >300ft Visibility >1600m<br>");
+  weather.replace("amb", "AMBER: Cloud Base >200ft Visibility >800m<br>");
+  weather.replace("redd", "RED: Cloud Base <200ft Visibility <800m<br>");
+  weather.replace("black", "BLACK: Runway is Unusable<br>");
+  
   weather.replace("KN", "Broken");                     // Rename
   weather.replace("OC", "Overcast");                   // Rename
   weather.replace("Conv", "Convective");               // Rename
@@ -1407,7 +1378,6 @@ String Decode_Weather(String weather) {
   weather.replace("mbedded", "Embedded");              // Change it Back
 
   weather.replace("awos", "AWOS");                     // Change it Back
-  weather.replace("black", "BLACK");                   // Change it Back
   weather.replace("cavok", "CAVOK");                   // Change it Back
   weather.replace("utc", "UTC ");                      // Change it Back
   weather.replace("qfe", "QFE ");                      // Change it Back
