@@ -20,7 +20,9 @@ The number and names of the Stations are Configurable for your application.
 Note: With less than 50 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
 
 
-+ MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.  Push a pin through the front of the chart where you want place the led, then turn the chart over and place the led over the hole.  I used Scotch Tape to keep it in place.  Note, keep the wires as short as possible.
++ MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.
++ Cut the led strip up and tin the connections.
++ Push a pin through the front of the chart where you want place the led, then turn the chart over and place the led over the hole.  I used Scotch Tape to keep it in place.  Note, keep the wires as short as possible.
 
 + The idea is mount the LEDS behind a Chart so the light shines through the chart.
 
