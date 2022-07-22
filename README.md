@@ -22,7 +22,8 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 
 + MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.
 + Cut the led strip up and tin the connections.
-+ Push a pin through the front of the chart where you want place the led, then turn the chart over and place the led over the hole.  I used Scotch Tape to keep it in place.  Note, keep the wires as short as possible.
++ Push a pin through the front of the chart where you want place the led, then turn the chart over and place the led over the hole.  I used Scotch Tape to keep it in place.  Then wire and solder.  Note, keep the wires as short as possible.
++ MOUNTING OF LEDS PLAN B : Use a foam backing. Lay the chart on the foam backing and push the pin through the chart and into the backing.  Now, fix the leds to the backing foam where ever there is a pin hole.  Wire and solder.
 
 + The idea is mount the LEDS behind a Chart so the light shines through the chart.
 
