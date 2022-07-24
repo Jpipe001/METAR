@@ -1,10 +1,10 @@
 /*
-  07/19/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
+  07/24/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
   https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.  ~  GOOD READ
-  https://joeclarksblog.com/wp-content/uploads/2012/11/high_flight-790x1024.jpg
+  https://joeclarksblog.com/wp-content/uploads/2012/11/high_flight-790x1024.jpg  ~  poem HIGH FLIGHT
 
   https://youtu.be/Yg61_kyG2zE    HomebuiltHELP; The video that started me on this project.
   https://youtu.be/xPlN_Tk3VLQ    Getting Started with ESP32 video from DroneBot Workshop.
@@ -57,7 +57,7 @@
   STATION html shows DECODED METAR information and much MORE.  (See Below for Improvements)
 
   NOTE: To view these, you need the http address which is shown at start up, if the Serial Monitor is switched on.
-  or Click on this Logical Name Test Link  http://metar.local/
+  or Click on this Logical Name Test Link  http://metar.local
 
   Makes a GREAT Christmas Tree Chain of Lights, TOO (and a Good Conversation Piece).
 
@@ -66,19 +66,12 @@
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
   //  RECENT CHANGES:
-
-  More Reliable, More Modified Dictionary 01/19/22
-  Modified to Summary Page to Jump to a Station 03/2/22
-  Few minor Tweaks 03/11/22
-  Reading Codes Backwards 03/14/22
-  Modified Dictionary 03/22/22
-  Modified Search 04/04/22
-  Added Wind to remarks 04/04/22
   Changed to Printf  06/12/22
   Changed Vis/Temp/Press Display Colors a Little 06/26/22
-  Added "Remarks" to Summary Display 06/29/22
+  Added Remarks to Display Summary 07/29/22
   ENTERED Station Can be set to Any Station 07/04/22
-  Made things a Little better !! 07/19/22
+  Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
+  Made things a Little Better  07/24/22
 */
 
 //#include <Arduino.h>
@@ -108,6 +101,9 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 const char*      ssid = "your network name";          // your network SSID (name)
 const char*  password = "your network password";      // your network password
 
+//const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
+//const char*  password = "johnjohn";        // your network password
+
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
 const long  gmtOffset_sec = 0;                // UTC Time : Time Zone 60*60*0 Hrs
@@ -120,7 +116,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 #define NUM_LEDS    No_Stations      // Number of LEDs
 #define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With ***  330 to 500 Ohm Resistor
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
-#define COLOR_ORDER         GRB      // WS2811 are GRB or WS2812 are RGB or NEOPIXEL are CRGB
+#define COLOR_ORDER         GRB      // WS2811 are RGB or WS2812 are GRB or NEOPIXEL are CRGB
 #define BRIGHTNESS           20      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
 #define FRAMES_PER_SECOND   120
 CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB
@@ -172,7 +168,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "EGKK, LONDON GATWICK, UK   ",        // 41
   "EGCC, MANCHESTER, UK       ",        // 42
   "EGDM, BOSCOMBE DOWN, UK    ",        // 43
-  "EGYP, MOUNT PLEASANT, Falkland Islands",        // 44
+  "EGYP, MOUNT PLEASANT, Falkland Islands", // 44
   "EHAM, AMSTERDAM SCHIPHOL   ",        // 45
   "LFSB, BASEL, SWITZERLAND   ",        // 46
   "KORL, ORLANDO, FL          ",        // 47
@@ -197,8 +193,8 @@ PROGMEM String  StationMetar[No_Stations + 1];   // Station Metar code including
 PROGMEM String StationRemark[No_Stations + 1];   // Station Remark code including "brackets"
 PROGMEM String        Remark[No_Stations + 1];   // Final Remark for Station (text)
 PROGMEM String   Sig_Weather[No_Stations + 1];   // Significant Weather
-PROGMEM float           temp[No_Stations + 1];   // Temperature deg C
-PROGMEM float          dewpt[No_Stations + 1];   // Dew point deg C
+PROGMEM float           TempC[No_Stations + 1];   // Temperature deg C
+PROGMEM float          DewptC[No_Stations + 1];   // Dew point deg C
 PROGMEM String          Wind[No_Stations + 1];   // Wind speed
 PROGMEM String          wDir[No_Stations + 1];   // Wind direction
 PROGMEM int         old_wDir[No_Stations + 1];   // Old Wind direction
@@ -278,7 +274,7 @@ void setup() {
       delay(1000);                   // Stay here
     }
   }
-  
+
   Serial.printf("To View Decoded Station METARs from a Computer or \nCell Phone connected to the %s WiFi Network.\n", ssid);
 
   HW_addr = "http://" + WiFi.localIP().toString();      // IP Address
@@ -362,7 +358,7 @@ void Display_Metar_LEDS () {
   Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White]
   //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]
   Display_Temp_LEDS (Wait_Time);    //  Display Temperatures [Blue-Green-Yellow-Red]
-  Display_Alt_LEDS (Wait_Time);     //  Display Altimeter Pressure [Blue-Purple]
+  Display_Alt_LEDS (Wait_Time);     //  Display progression of a Pressure [Blue-Purple]
 }
 
 
@@ -384,8 +380,8 @@ void Update_Time() {
 // *********** Initialize LEDs
 void Init_LEDS() {
   // Set up the strip configuration
-  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, No_Stations).setCorrection(TypicalLEDStrip);
-  //FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);        // For NEOPIXELS
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, No_Stations).setCorrection(TypicalLEDStrip); // For WS2811 or WS2812
+  //FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);       // For NEOPIXEL
   FastLED.setBrightness(BRIGHTNESS);           // Set master brightness control (<12=Dim 20=ok >20=Too Bright)
   fill_solid(leds, No_Stations, CRGB::Black);  // Set all leds to Black
   FastLED.show();
@@ -522,8 +518,8 @@ void ParseMetar(byte i) {
     visab[i] = 0;                   // Not Found
     wDir[i] = "NA";                 // Not Found
     Wind[i] = "NA";                 // Not Found
-    temp[i] = 0;                    // Not Found
-    dewpt[i] = 0;                   // Not Found
+    TempC[i] = 0;                    // Not Found
+    DewptC[i] = 0;                   // Not Found
     altim[i] = 0;                   // Not Found
     old_altim[i] = 0;               // Not Found
     Remark[i] = "";                 // Not Found
@@ -964,17 +960,16 @@ void Decodedata(byte i, String station, String Parsed_metar) {
 
     if (Sig_Weather[i] == "")  Sig_Weather[i] = "None";
 
-    // Searching temp_c        temp[i] = deg C
+    // Searching temp_c        TempC[i] = deg C
     search0 = Parsed_metar.indexOf("<temp_c") + 8;
     search1 = Parsed_metar.indexOf("</temp");
     if (search0 < 8)   Serial.printf("%s\tNo:%d\t%s\tTemperature Not Found, in Decodedata\n", Clock, i, station.c_str());
-    if (search0 < 8) temp[i] = 0;  else  temp[i] = Parsed_metar.substring(search0, search1).toFloat() + 0.001;
-    //float TempF = temp[i] * 1.8 + 32;            // deg F
+    if (search0 < 8) TempC[i] = 0;  else  TempC[i] = Parsed_metar.substring(search0, search1).toFloat() + 0.001;
 
     // Searching dewpoint_c
     search0 = Parsed_metar.indexOf("<dewpoint_c") + 12;
     search1 = Parsed_metar.indexOf("</dewpoint");
-    if (search0 < 12) dewpt[i] = 0;  else  dewpt[i] = Parsed_metar.substring(search0, search1).toFloat() + 0.001;
+    if (search0 < 12) DewptC[i] = 0;  else  DewptC[i] = Parsed_metar.substring(search0, search1).toFloat() + 0.001;
 
     // Searching Wind_dir_degrees
     old_wDir[i] = wDir[i].toInt();
@@ -1187,7 +1182,7 @@ String Decode_Weather(String weather) {
   weather.replace("LTG", " Lightning");
   weather.replace("LTinC", "in Clouds");
   weather.replace("LTtoG", "to Ground");
-  weather.replace("CA", " and Cloud to Air");
+  weather.replace("CA", "and Cloud to Air");
 
   weather.replace("ALQDS", "All Quadrents");
   weather.replace("ALQS", "All Quadrents");
@@ -1195,7 +1190,8 @@ String Decode_Weather(String weather) {
   weather.replace("DSTN", "Distant");
   weather.replace("DSNT", "Distant");
   weather.replace("DST", "Distant");
-  weather.replace("MOVG", "Movement");
+  weather.replace("MOVD", "Moved");
+  weather.replace("MOVG", "Moving");
   weather.replace("MOV", "Movement");
   weather.replace("STNRY", "Stationary");
 
@@ -1355,7 +1351,7 @@ String Decode_Weather(String weather) {
   weather.replace("amb", "AMBER: Cloud Base >200ft Visibility >800m<br>");
   weather.replace("redd", "RED: Cloud Base <200ft Visibility <800m<br>");
   weather.replace("black", "BLACK: Runway is Unusable<br>");
-  
+
   weather.replace("KN", "Broken");                     // Rename
   weather.replace("OC", "Overcast");                   // Rename
   weather.replace("Conv", "Convective");               // Rename
@@ -1562,9 +1558,9 @@ void Display_Wind_LEDS (int wait) {
 // *********** Display Temperatures [Blue Green Yellow Orange Red]
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = 160 - temp[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
+    byte hue = 160 - TempC[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
     leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
-    if (temp[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
+    if (TempC[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
   delay(wait);
@@ -1612,7 +1608,6 @@ void Go_Server ( void * pvParameters ) {
   byte wx_flag;
   byte Station_Flag = 1;
   byte Summary_Flag = 1;
-  float TempF;
   String html_code;
 
   for (;;) {
@@ -1732,6 +1727,7 @@ void Go_Server ( void * pvParameters ) {
 
 
               if (Summary_Flag == 1)  {
+
                 // *********** DISPLAY SUMMARY ***********
                 // Display the HTML web page responsive in any web browser, Page Header, Title, Style & Page Body
                 html_code = "<!DOCTYPE html><html><HEAD><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
@@ -1811,8 +1807,8 @@ void Go_Server ( void * pvParameters ) {
                     client.print(color + Wind[i] + "</FONT></TD>");
 
                     // Display Temperature in SUMMARY
-                    TempF = temp[i] * 1.8 + 32;  // deg F
-                    if (temp[i] == 0 && dewpt[i] == 0)  client.print(color + "NA </FONT></TD>"); else if (Deg == "Deg C")   client.print(color + String(temp[i], 1) + "</FONT></TD>"); else
+                    float TempF = TempC[i] * 1.8 + 32;  // deg F
+                    if (TempC[i] == 0 && DewptC[i] == 0)  client.print(color + "NA </FONT></TD>"); else if (Deg == "Deg C")   client.print(color + String(TempC[i], 1) + "</FONT></TD>"); else
                       client.print(color + String(TempF, 1) + "</FONT></TD>");
 
                     // Display Altimeter in SUMMARY
@@ -1840,6 +1836,7 @@ void Go_Server ( void * pvParameters ) {
                 }
                 client.print(F("</TABLE>"));
               }
+
 
               if (Station_Flag == 1)  {
 
@@ -1970,20 +1967,38 @@ void Go_Server ( void * pvParameters ) {
                   }
                   html_code += "</TD></TR>";
 
-                  //  Temperature in STATION
-                  TempF = temp[sta_n] * 1.8 + 32;  // deg F
+                  //  Temperature, Heat Index and Wind Chill in STATION
+                  float TempF = TempC[sta_n] * 1.8 + 32;  // Deg F
                   html_code += "<TR><TD>Temperature</TD><TD>";
-                  if (temp[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
-                  if (temp[sta_n] == 0 && dewpt[sta_n] == 0)   html_code += "NA</FONT>";  else
-                    html_code += String(temp[sta_n], 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(TempF, 1) + " Deg F</FONT>";
-                  if (temp[sta_n] >= 35.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I> and HOT</I></FONT>";
+                  if (TempC[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
+                  if (TempC[sta_n] == 0 && DewptC[sta_n] == 0)   html_code += "NA</FONT>";
+                  else  {
+                    html_code += String(TempC[sta_n], 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(TempF, 1) + " Deg F</FONT>";
+                    float Heat_Index = Calc_Heat_Index(sta_n, TempF);             // Calculate Heat_Index
+                    // Don't display Heat Index unless temperature > 18 Deg C
+                    if (TempC[sta_n] >= 18) {
+                      html_code += "<BR><FONT COLOR='Purple'>" + String(Heat_Index, 1) +  " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Heat_Index * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspHeat Index</FONT>";
+                      if (TempC[sta_n] >= 35.0)   html_code += "<BR><FONT SIZE='-1' FONT COLOR='Red'><I> And HOT</I></FONT>";
+                    }
 
-                  //  Dew Point in STATION
-                  html_code += "</TD></TR><TR><TD>Dew Point</TD><TD>";
-                  if (dewpt[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
-                  if (dewpt[sta_n] == 0)   html_code += "NA"; else
-                    html_code += String(dewpt[sta_n], 1) + " Deg C";
-                  if (dewpt[sta_n] >= 24.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I> and Muggy</I></FONT>";
+                    // Don't display Wind Chill unless Wind Speed is greater than 3 MPH and Temperature is less than 14 Deg C
+                    if (Wind[sta_n].toInt() > 3 && TempC[sta_n] <= 14) {
+                      float Wind_Chill = Calc_Wind_Chill(sta_n);             // Calculate Wind Chill
+                      if (Wind_Chill <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Purple'>";
+                      html_code += "<BR>" + String(Wind_Chill, 1) +  " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Wind_Chill * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspWind Chill</FONT>";
+                    }
+                  }
+
+                  //  Dew Point & Relative Humidity in STATION
+                  html_code += "<TR><TD>Dew Point</TD><TD>";
+                  if (DewptC[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
+                  if (DewptC[sta_n] == 0)   html_code += "NA";
+                  else  {
+                    html_code += String(DewptC[sta_n], 1) + " Deg C";
+                    float Rel_Humid = Calc_Rel_Humid(sta_n);             // Calculate Relative Humidity
+                    html_code += "<BR><FONT COLOR='Purple'>" + String(Rel_Humid, 0) + " % &nbsp&nbsp&nbspRelative Humidity</FONT>";
+                    if (DewptC[sta_n] >= 24.0)   html_code += "<BR><FONT SIZE='-1' FONT COLOR='Red'><I> And Muggy</I></FONT>";
+                  }
                   html_code += "</TD></TR>";
 
                   //  Altimeter in STATION
@@ -2007,9 +2022,9 @@ void Go_Server ( void * pvParameters ) {
                   float Elevation = elevation[sta_n] * 3.28; //feet
                   html_code += "<TR><TD>Elevation</TD><TD>" + String(elevation[sta_n], 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Elevation, 1) + " Ft</TD></TR>";
                   float PressAlt = Elevation + (1000 * (29.92 - altim[sta_n]));                              // Ft
-                  float DensityAlt = PressAlt + (120 * (temp[sta_n] - (15 - abs(2 * Elevation / 1000))));    // Ft
+                  float DensityAlt = PressAlt + (120 * (TempC[sta_n] - (15 - abs(2 * Elevation / 1000))));    // Ft
                   html_code += "<TR><TD>Estimated Density Altitude</TD><TD>";
-                  if (temp[sta_n] == 0 || altim[sta_n] == 0)   html_code += "NA"; else  html_code += String(DensityAlt, 1) + " Ft</TD></TR>";
+                  if (TempC[sta_n] == 0 || altim[sta_n] == 0)   html_code += "NA"; else  html_code += String(DensityAlt, 1) + " Ft</TD></TR>";
 
                   html_code += "</TABLE>";             //  End of Table in Station
                   client.print(html_code);
@@ -2038,3 +2053,35 @@ void Go_Server ( void * pvParameters ) {
     client.stop();                 // Close the Connection
   }
 }
+
+
+float Calc_Rel_Humid(byte sta_n)  {     // Calculate Relative Humidity
+  // RH = 100 × {exp [17.625 × Dp  / (243.04 + Dp )]/exp [17.625 × T/ (243.04 + T)]}
+  // T & Dp in deg C
+  float Rel_Humid = 100 * (exp((17.625 * DewptC[sta_n]) / (243.04 + DewptC[sta_n]))) / (exp((17.625 * TempC[sta_n]) / (243.04 + TempC[sta_n])));
+  return Rel_Humid;
+}
+
+
+float Calc_Heat_Index(byte sta_n, float TempF)  {    // Calculate Heat Index
+  //HI = -42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH - 0.00683783*T*T - 0.05481717*RH*RH + 0.00122874*T*T*RH + 0.00085282*T*RH*RH - 0.00000199*T*T*RH*RH
+  //HI = heat index (Deg)
+  //T = air temperature (Deg) (T  > 18 Deg C or T > 57 Deg F)
+  //RH = relative humidity (%)
+  float Rel_Humid = Calc_Rel_Humid(sta_n);          // Calculate Relative Humidity
+
+  float Heat_Index = (-42.379 + (2.04901523 * TempF) + (10.14333127 * Rel_Humid)  - (0.22475541 * TempF * Rel_Humid)  - (0.00683783 * TempF * TempF)  - (0.05481717 * Rel_Humid * Rel_Humid)  + (0.00122874 * TempF * TempF * Rel_Humid)  + (0.00085282 * TempF * Rel_Humid * Rel_Humid)  - (0.00000199 * TempF * TempF * Rel_Humid * Rel_Humid) - 32 ) * 5 / 9;
+  return Heat_Index;
+}
+
+
+float Calc_Wind_Chill(byte sta_n)  {     // Calculate Wind Chill
+  // Wind_Chill = 13.12 + 0.6215 * Tair - 11.37 * POWER(wind_speed,0.16)+0.3965 * Tair * POWER(wind_speed,0.16)
+  int Wind_Speed = Wind[sta_n].toInt();
+  float wind_speed = Wind_Speed * 1.852; // Convert to Kph
+
+  float Wind_Chill = 13.12 + 0.6215 * TempC[sta_n] - 11.37 * pow(wind_speed, 0.16) + 0.3965 * TempC[sta_n] * pow(wind_speed, 0.16);
+  if (Wind_Chill < 0 ) Wind_Chill = Wind_Chill - 0.5;  else  Wind_Chill = Wind_Chill + 0.5;
+  return Wind_Chill;
+}
+
