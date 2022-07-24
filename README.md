@@ -40,13 +40,13 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 + METAR Summary Display Example:
 
 
-![Summary_3_8](https://user-images.githubusercontent.com/24758833/157302360-1a6c893c-3b95-476c-b7d6-a997288b4bfb.jpg)
+![image](https://user-images.githubusercontent.com/24758833/180669712-ec0df327-760a-49f8-941e-93d3c7773029.png)
 
 
 + METAR Station Display Example:
 
 
-![ATLANTA_3_8](https://user-images.githubusercontent.com/24758833/157302434-2aca9c6a-6f6b-4dd7-b3f8-ecf3f084f094.jpg)
+![image](https://user-images.githubusercontent.com/24758833/180670094-4c4649e6-6704-46a9-b432-c7110f66e7db.png)
 
 
 + See Additional Remarks/Comments in the program file.
