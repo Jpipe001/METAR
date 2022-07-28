@@ -1,5 +1,5 @@
 /*
-  07/24/2022  Latest Software on Github : https://github.com/Jpipe001/METAR
+  07/28/2022  Latest Software on Github : https://github.com/Jpipe001/METAR  << Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -66,12 +66,13 @@
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
   //  RECENT CHANGES:
+  
   Changed to Printf  06/12/22
   Changed Vis/Temp/Press Display Colors a Little 06/26/22
   Added Remarks to Display Summary 07/29/22
   ENTERED Station Can be set to Any Station 07/04/22
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
-  Made things a Little Better  07/24/22
+  Made things a Little Better  07/28/22
 */
 
 //#include <Arduino.h>
@@ -119,7 +120,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 #define COLOR_ORDER         GRB      // WS2811 are RGB or WS2812 are GRB or NEOPIXEL are CRGB
 #define BRIGHTNESS           20      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
 #define FRAMES_PER_SECOND   120
-CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB
+CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB for Displaying Gradients
 
 
 // Define STATIONS Variables      ~~~~~      Some Examples
@@ -193,19 +194,19 @@ PROGMEM String  StationMetar[No_Stations + 1];   // Station Metar code including
 PROGMEM String StationRemark[No_Stations + 1];   // Station Remark code including "brackets"
 PROGMEM String        Remark[No_Stations + 1];   // Final Remark for Station (text)
 PROGMEM String   Sig_Weather[No_Stations + 1];   // Significant Weather
-PROGMEM float           TempC[No_Stations + 1];   // Temperature deg C
-PROGMEM float          DewptC[No_Stations + 1];   // Dew point deg C
+PROGMEM float          TempC[No_Stations + 1];   // Temperature deg C
+PROGMEM float         DewptC[No_Stations + 1];   // Dew point deg C
 PROGMEM String          Wind[No_Stations + 1];   // Wind speed
 PROGMEM String          wDir[No_Stations + 1];   // Wind direction
-PROGMEM int         old_wDir[No_Stations + 1];   // Old Wind direction
-PROGMEM float          visab[No_Stations + 1];   // Visibility
+PROGMEM int         old_wDir[No_Stations + 1];   // Previous Wind direction
+PROGMEM float          Visab[No_Stations + 1];   // Visibility
 PROGMEM String           Sky[No_Stations + 1];   // Sky_cover
 PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
-PROGMEM int   old_cloud_base[No_Stations + 1];   // Old Cloud Base
-PROGMEM float        seapres[No_Stations + 1];   // Sea Level Pressure
-PROGMEM float          altim[No_Stations + 1];   // Altimeter setting
-PROGMEM float      old_altim[No_Stations + 1];   // Old altimeter setting
-PROGMEM float      elevation[No_Stations + 1];   // Elevation setting
+PROGMEM int   old_cloud_base[No_Stations + 1];   // Previous Cloud Base
+PROGMEM float        Seapres[No_Stations + 1];   // Sea Level Pressure
+PROGMEM float          Altim[No_Stations + 1];   // Altimeter setting
+PROGMEM float      old_Altim[No_Stations + 1];   // Previous altimeter setting
+PROGMEM float      Elevation[No_Stations + 1];   // Elevation setting
 PROGMEM String      Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
 //................................................ Black  Green   Blue   Red   Magenta
 
@@ -226,8 +227,9 @@ String HW_addr;               // WiFi local hardware Address
 String SW_addr;               // WiFi local software Address
 TaskHandle_t Task1;           // Main_Loop, Core 0
 TaskHandle_t Task2;           // Go_Server, Core 1
-const char* ServerName = "metar";      // Logical Address http://metar.local
 String ShortFileName;         // Shortened File Name
+const char* ServerName = "metar";      // Logical Address http://metar.local
+
 
 
 void setup() {
@@ -358,7 +360,7 @@ void Display_Metar_LEDS () {
   Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White]
   //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]
   Display_Temp_LEDS (Wait_Time);    //  Display Temperatures [Blue-Green-Yellow-Red]
-  Display_Alt_LEDS (Wait_Time);     //  Display progression of a Pressure [Blue-Purple]
+  Display_Alt_LEDS (Wait_Time);     //  Display Distribution of Pressure [Blue-Purple]
 }
 
 
@@ -515,13 +517,13 @@ void ParseMetar(byte i) {
     StationRemark[i] = "";
     if (httpCode != HTTP_CODE_OK)  StationMetar[i] = "Internet Connection Error";
     Sig_Weather[i] = "Not Found";   // Not Found
-    visab[i] = 0;                   // Not Found
+    Visab[i] = 0;                   // Not Found
     wDir[i] = "NA";                 // Not Found
     Wind[i] = "NA";                 // Not Found
     TempC[i] = 0;                    // Not Found
     DewptC[i] = 0;                   // Not Found
-    altim[i] = 0;                   // Not Found
-    old_altim[i] = 0;               // Not Found
+    Altim[i] = 0;                   // Not Found
+    old_Altim[i] = 0;               // Not Found
     Remark[i] = "";                 // Not Found
 
     Display_LED (i, 20);            // Display Station LED
@@ -988,7 +990,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     // Searching  visibility_statute_mi
     search0 = Parsed_metar.indexOf("visibility_statute_mi") + 22;
     search1 = Parsed_metar.indexOf("</visibility");
-    if (search0 < 22)  visab[i] = 0;  else  visab[i] = Parsed_metar.substring(search0, search1).toFloat();
+    if (search0 < 22)  Visab[i] = 0;  else  Visab[i] = Parsed_metar.substring(search0, search1).toFloat();
 
     // Searching  <sky_condition
     old_cloud_base[i] = new_cloud_base[i];
@@ -1019,21 +1021,21 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     }
 
     // Searching <altim_in_hg
-    old_altim[i] = altim[i];
+    old_Altim[i] = Altim[i];
     search0 = Parsed_metar.indexOf("<altim_in_hg>") + 13;
     search1 = Parsed_metar.indexOf("</altim_in_hg>");
     if (search0 < 13)  Serial.printf("%s\tNo:%d\t%s\tAltimeter Not Found, in Decodedata\n", Clock, i, station.c_str());
-    if (search0 < 13) altim[i] = 0;  else  altim[i] = Parsed_metar.substring(search0, search1).toFloat();
-    //    float Pressure = altim[i]; // in_hg
+    if (search0 < 13) Altim[i] = 0;  else  Altim[i] = Parsed_metar.substring(search0, search1).toFloat();
+    //    float Pressure = Altim[i]; // in_hg
 
     // Searching <sea_level_pressure_mb
     search0 = Parsed_metar.indexOf("<sea_level_pressure_mb>") + 23;
-    if (search0 < 23) seapres[i] = 0;  else  seapres[i] = Parsed_metar.substring(search0, search0 + 6).toFloat();
+    if (search0 < 23) Seapres[i] = 0;  else  Seapres[i] = Parsed_metar.substring(search0, search0 + 6).toFloat();
 
     // Searching elevation_m
     search0 = Parsed_metar.indexOf("<elevation") + 13;
     search1 = Parsed_metar.indexOf("</elevation");
-    if (search0 < 13) elevation[i] = 0; else elevation[i] = Parsed_metar.substring(search0, search1).toFloat();
+    if (search0 < 13) Elevation[i] = 0; else Elevation[i] = Parsed_metar.substring(search0, search1).toFloat();
 
   }                               // UPDATE Station
   Display_LED (i, 20);            // Display This Station LED
@@ -1179,6 +1181,7 @@ String Decode_Weather(String weather) {
   weather.replace("LTGCC", "LTG LTinC");               // Lightning in Cloud
   weather.replace("LTGIC", "LTG LTinC");               // Lightning in Cloud
   weather.replace("CG", " and LTtoG");                 // Lightning to Ground (fix)
+  weather.replace("LTNG", " Lightning");
   weather.replace("LTG", " Lightning");
   weather.replace("LTinC", "in Clouds");
   weather.replace("LTtoG", "to Ground");
@@ -1531,12 +1534,12 @@ void Set_Cat_LED (byte i)  {
 // *********** Display Visibility [Red White]
 void Display_Vis_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue     = 10  + visab[i] * 4;       // (red white) [ 10 ~ 50 ]
-    byte sat     = 180 - visab[i] * 18;      // (red white) [ 0 ~ 180 ]
+    byte hue     = 10  + Visab[i] * 4;       // (red white) [ 10 ~ 50 ]
+    byte sat     = 180 - Visab[i] * 18;      // (red white) [ 0 ~ 180 ]
     byte bright  = 120;                      // [ <100=Dim  120=ok  >160=Too Bright/Much Power ]
     leds[i - 1] = CHSV(hue, sat, bright);    // ( hue, sat, bright )
-    if (visab[i] > 9)   leds[i - 1] = CHSV( 45, 0, bright); // White
-    if (visab[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
+    if (Visab[i] > 9)   leds[i - 1] = CHSV( 45, 0, bright); // White
+    if (Visab[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
   delay(wait);
@@ -1570,9 +1573,9 @@ void Display_Temp_LEDS (int wait) {
 // *********** Display Altimeter Pressure [Blue Purple]
 void Display_Alt_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = (altim[i] - 29.92) * 100;        //  (normally) blue purple [ 70 ~ 270 ]
+    byte hue = (Altim[i] - 29.92) * 100;        //  (normally) blue purple [ 70 ~ 270 ]
     leds[i - 1] = CHSV( hue + 170, 180, 150);   // ( hue, sat, bright )
-    if (altim[i] == 0 || Category[i].substring(0, 1) == "NF")   leds[i - 1] = CHSV( 0, 0, 0);
+    if (Altim[i] == 0 || Category[i].substring(0, 1) == "NF")   leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
   delay(wait);
@@ -1661,8 +1664,8 @@ void Go_Server ( void * pvParameters ) {
                   StationRemark[sta_n] = "";
                   new_cloud_base[sta_n] = 0;
                   old_cloud_base[sta_n] = 0;
-                  altim[sta_n] = 0;
-                  old_altim[sta_n] = 0;
+                  Altim[sta_n] = 0;
+                  old_Altim[sta_n] = 0;
                   wDir[sta_n] = "";
 
                   if (Comms_Flag > 0)  {
@@ -1744,7 +1747,8 @@ void Go_Server ( void * pvParameters ) {
                 client.print(html_code);
 
                 // Display SUMMARY Table ***********
-                String Deg = "Deg F";       // Set degrees F or C
+                String Deg = "Deg C";       // Set Temperature Units C or F   ***  For Fahrenheit : Change this to "Deg F"  ***
+
                 html_code = "<TABLE BORDER='2' CELLPADDING='5'>";
                 html_code += "<TR><TD>No:</TD><TD>Station<BR><CENTER>ID</CENTER></TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>from</TD><TD>WIND<BR>Speed</TD><TD>TEMP<BR>";
                 html_code += Deg;
@@ -1789,7 +1793,7 @@ void Go_Server ( void * pvParameters ) {
                     client.print(F("</FONT></TD>"));
 
                     // Display Visibility in SUMMARY
-                    if (visab[i] > 0)  client.print(color + String(visab[i]) + "</FONT></TD>");  else  client.print(color + "NA</FONT></TD>");
+                    if (Visab[i] > 0)  client.print(color + String(Visab[i]) + "</FONT></TD>");  else  client.print(color + "NA</FONT></TD>");
 
                     // Display Wind Direction in SUMMARY
                     int newDir = wDir[i].toInt();
@@ -1806,23 +1810,24 @@ void Go_Server ( void * pvParameters ) {
                     // Display Wind Speed in SUMMARY
                     client.print(color + Wind[i] + "</FONT></TD>");
 
-                    // Display Temperature in SUMMARY
+                    // Display Temperature in SUMMARY  ***  Set Temperature Units See Above (Display SUMMARY Table)  ***
                     float TempF = TempC[i] * 1.8 + 32;  // deg F
-                    if (TempC[i] == 0 && DewptC[i] == 0)  client.print(color + "NA </FONT></TD>"); else if (Deg == "Deg C")   client.print(color + String(TempC[i], 1) + "</FONT></TD>"); else
-                      client.print(color + String(TempF, 1) + "</FONT></TD>");
+                    if (TempC[i] == 0 && DewptC[i] == 0)  client.print(color + "NA </FONT></TD>");
+                    else if (Deg == "Deg C")   client.print(color + String(TempC[i], 1) + "</FONT></TD>");
+                    else client.print(color + String(TempF, 1) + "</FONT></TD>");
 
                     // Display Altimeter in SUMMARY
                     wx_flag = 0;
-                    if (old_altim[i] > 0.1)   {
-                      if (altim[i] >= old_altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
-                      if (altim[i] <= old_altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
-                      if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(altim[i]));
-                      else  client.print(color + String(altim[i]));
-                      if (altim[i] > old_altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
-                      if (altim[i] < old_altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
-                      if (altim[i] == old_altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
+                    if (old_Altim[i] > 0.1)   {
+                      if (Altim[i] >= old_Altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
+                      if (Altim[i] <= old_Altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
+                      if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(Altim[i]));
+                      else  client.print(color + String(Altim[i]));
+                      if (Altim[i] > old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
+                      if (Altim[i] < old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
+                      if (Altim[i] == old_Altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
                     }  else  {
-                      client.print(color + String(altim[i]));
+                      client.print(color + String(Altim[i]));
                     }
                     client.print(F("</FONT></TD>"));
 
@@ -1905,10 +1910,10 @@ void Go_Server ( void * pvParameters ) {
                     html_code += "<BR><FONT " + Bcol.substring(6, Bcol.length()) + ">Overcast Cloud Layer</FONT>";
                   if (new_cloud_base[sta_n] > 1 && new_cloud_base[sta_n] <= 1200)
                     html_code += "<BR><FONT " + Bcol.substring(6, Bcol.length()) + ">Low Cloud Base</FONT>";
-                  if (old_cloud_base[sta_n] > 0 && old_altim[sta_n] > 0)    {
-                    if (new_cloud_base[sta_n] > old_cloud_base[sta_n] && altim[sta_n] > old_altim[sta_n])
+                  if (old_cloud_base[sta_n] > 0 && old_Altim[sta_n] > 0)    {
+                    if (new_cloud_base[sta_n] > old_cloud_base[sta_n] && Altim[sta_n] > old_Altim[sta_n])
                       html_code += "<BR><FONT COLOR='Navy'>Weather is Getting Better</FONT>";
-                    if (new_cloud_base[sta_n] < old_cloud_base[sta_n] && altim[sta_n] < old_altim[sta_n])
+                    if (new_cloud_base[sta_n] < old_cloud_base[sta_n] && Altim[sta_n] < old_Altim[sta_n])
                       html_code += "<BR><FONT COLOR='Navy'>Weather is Getting Worse</FONT>";
                   }
 
@@ -1936,7 +1941,7 @@ void Go_Server ( void * pvParameters ) {
                     if (new_cloud_base[sta_n] == old_cloud_base[sta_n])  html_code += "&rArr; No change";   //right arrow
                   }
                   //  Significant Change in Cloud Base
-                  if (old_cloud_base[sta_n] > 0 && old_altim[sta_n] > 0)    {
+                  if (old_cloud_base[sta_n] > 0 && old_Altim[sta_n] > 0)    {
                     if (new_cloud_base[sta_n] >= old_cloud_base[sta_n] + diff_in_clouds) // INCREASE
                       html_code += "<BR><FONT COLOR='Navy'>Significant Increase in Cloud Base";
                     if (new_cloud_base[sta_n] <= old_cloud_base[sta_n] - diff_in_clouds) // DECREASE
@@ -1946,7 +1951,7 @@ void Go_Server ( void * pvParameters ) {
 
                   //  Visibility in STATION
                   html_code += "<TR><TD>Visibility</TD>" + color;
-                  if (visab[sta_n] > 0)  html_code += String(visab[sta_n]) + " Statute miles</FONT></TD></TR>";  else  html_code += "NA</FONT></TD></TR>";
+                  if (Visab[sta_n] > 0)  html_code += String(Visab[sta_n]) + " Statute miles</FONT></TD></TR>";  else  html_code += "NA</FONT></TD></TR>";
 
                   //  Wind in STATION
                   html_code += "<TR><TD>Wind from</TD><TD>";
@@ -1967,64 +1972,62 @@ void Go_Server ( void * pvParameters ) {
                   }
                   html_code += "</TD></TR>";
 
-                  //  Temperature, Heat Index and Wind Chill in STATION
+                  //  Temperature and Heat Index or Wind Chill in STATION
                   float TempF = TempC[sta_n] * 1.8 + 32;  // Deg F
                   html_code += "<TR><TD>Temperature</TD><TD>";
                   if (TempC[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
                   if (TempC[sta_n] == 0 && DewptC[sta_n] == 0)   html_code += "NA</FONT>";
                   else  {
                     html_code += String(TempC[sta_n], 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(TempF, 1) + " Deg F</FONT>";
+                    if (TempC[sta_n] >= 35.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd HOT</I></FONT>";
+
+                    // Don't display Heat Index unless Temperature > 18 Deg C  and  Heat Index > Temperature
                     float Heat_Index = Calc_Heat_Index(sta_n, TempF);             // Calculate Heat_Index
-                    // Don't display Heat Index unless temperature > 18 Deg C
-                    if (TempC[sta_n] >= 18) {
+                    if (TempC[sta_n] >= 18  &&  Heat_Index >= TempC[sta_n]) {
                       html_code += "<BR><FONT COLOR='Purple'>" + String(Heat_Index, 1) +  " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Heat_Index * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspHeat Index</FONT>";
-                      if (TempC[sta_n] >= 35.0)   html_code += "<BR><FONT SIZE='-1' FONT COLOR='Red'><I> And HOT</I></FONT>";
                     }
 
-                    // Don't display Wind Chill unless Wind Speed is greater than 3 MPH and Temperature is less than 14 Deg C
-                    if (Wind[sta_n].toInt() > 3 && TempC[sta_n] <= 14) {
+                    // Don't display Wind Chill unless Wind Speed is greater than 3 KTS and Temperature is less than 14 Deg C
+                    if (Wind[sta_n].toInt() > 3 && TempC[sta_n] <= 10) {     //  Nugged this down
                       float Wind_Chill = Calc_Wind_Chill(sta_n);             // Calculate Wind Chill
                       if (Wind_Chill <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Purple'>";
-                      html_code += "<BR>" + String(Wind_Chill, 1) +  " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Wind_Chill * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspWind Chill</FONT>";
+                      html_code += "<BR>" + String(Wind_Chill, 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Wind_Chill * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspWind Chill</FONT>";
                     }
                   }
 
                   //  Dew Point & Relative Humidity in STATION
-                  html_code += "<TR><TD>Dew Point</TD><TD>";
+                  html_code += "</TD></TR><TR><TD>Dew Point<BR><FONT COLOR='Purple'>Relative Humidity</FONT></TD><TD>";
                   if (DewptC[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
                   if (DewptC[sta_n] == 0)   html_code += "NA";
                   else  {
-                    html_code += String(DewptC[sta_n], 1) + " Deg C";
+                    html_code += String(DewptC[sta_n], 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(DewptC[sta_n] * 1.8 + 32, 1) + " Deg F</FONT>";
+                    if (DewptC[sta_n] >= 24.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd Muggy</I></FONT>";
                     float Rel_Humid = Calc_Rel_Humid(sta_n);             // Calculate Relative Humidity
-                    html_code += "<BR><FONT COLOR='Purple'>" + String(Rel_Humid, 0) + " % &nbsp&nbsp&nbspRelative Humidity</FONT>";
-                    if (DewptC[sta_n] >= 24.0)   html_code += "<BR><FONT SIZE='-1' FONT COLOR='Red'><I> And Muggy</I></FONT>";
+                    html_code += "<BR><FONT COLOR='Purple'>" + String(Rel_Humid, 0) + " %</FONT>";
                   }
-                  html_code += "</TD></TR>";
 
                   //  Altimeter in STATION
-                  html_code += "</FONT><TR><TD>Altimeter</TD><TD>" + String(altim[sta_n]) + "&nbspin&nbspHg&nbsp&nbsp";
-                  if (old_altim[sta_n] > 0)  {
-                    if (altim[sta_n] > old_altim[sta_n]) {
-                      if (altim[sta_n] > old_altim[sta_n] + diff_in_press)  html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
+                  html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" + String(Altim[sta_n]) + "&nbspin&nbspHg&nbsp&nbsp";
+                  if (old_Altim[sta_n] > 0)  {
+                    if (Altim[sta_n] > old_Altim[sta_n]) {
+                      if (Altim[sta_n] > old_Altim[sta_n] + diff_in_press)  html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
                       html_code += "&uArr; from ";   //up arrow
-                      html_code += String(old_altim[sta_n], 2);
+                      html_code += String(old_Altim[sta_n], 2);
                     }
-                    if (altim[sta_n] < old_altim[sta_n]) {
-                      if (altim[sta_n] < old_altim[sta_n] - diff_in_press)   html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
+                    if (Altim[sta_n] < old_Altim[sta_n]) {
+                      if (Altim[sta_n] < old_Altim[sta_n] - diff_in_press)   html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
                       html_code += "&dArr; from ";   //down arrow
-                      html_code += String(old_altim[sta_n], 2);
+                      html_code += String(old_Altim[sta_n], 2);
                     }
-                    if (altim[sta_n] == old_altim[sta_n])   html_code += "&rArr; Steady";   //right arrow
+                    if (Altim[sta_n] == old_Altim[sta_n])   html_code += "&rArr; Steady";   //right arrow
                   }
-                  html_code += "</TD></TR>";
 
                   //  Elevation & Density Altitude in STATION
-                  float Elevation = elevation[sta_n] * 3.28; //feet
-                  html_code += "<TR><TD>Elevation</TD><TD>" + String(elevation[sta_n], 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Elevation, 1) + " Ft</TD></TR>";
-                  float PressAlt = Elevation + (1000 * (29.92 - altim[sta_n]));                              // Ft
-                  float DensityAlt = PressAlt + (120 * (TempC[sta_n] - (15 - abs(2 * Elevation / 1000))));    // Ft
+                  html_code += "</TD></TR><TR><TD>Elevation</TD><TD>" + String(Elevation[sta_n], 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Elevation[sta_n] * 3.28, 1) + " Ft</TD></TR>";
+
                   html_code += "<TR><TD>Estimated Density Altitude</TD><TD>";
-                  if (TempC[sta_n] == 0 || altim[sta_n] == 0)   html_code += "NA"; else  html_code += String(DensityAlt, 1) + " Ft</TD></TR>";
+                  float Density_Alt = Calc_Density_Alt(sta_n);             // Calculate Density Altitude
+                  if (TempC[sta_n] == 0 || Altim[sta_n] == 0)   html_code += "NA</TD></TR>"; else  html_code += String(Density_Alt / 3.28, 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Density_Alt, 1)+ " Ft</TD></TR>";
 
                   html_code += "</TABLE>";             //  End of Table in Station
                   client.print(html_code);
@@ -2055,28 +2058,36 @@ void Go_Server ( void * pvParameters ) {
 }
 
 
-float Calc_Rel_Humid(byte sta_n)  {     // Calculate Relative Humidity
-  // RH = 100 × {exp [17.625 × Dp  / (243.04 + Dp )]/exp [17.625 × T/ (243.04 + T)]}
-  // T & Dp in deg C
+// ***********   Calculate Relative Humidity
+float Calc_Rel_Humid(byte sta_n)  {
+  /* RH = 100 × {exp [17.625 × Dp  / (243.04 + Dp )]/exp [17.625 × T/ (243.04 + T)]}
+     T & Dp in Deg C
+  */
   float Rel_Humid = 100 * (exp((17.625 * DewptC[sta_n]) / (243.04 + DewptC[sta_n]))) / (exp((17.625 * TempC[sta_n]) / (243.04 + TempC[sta_n])));
   return Rel_Humid;
 }
 
 
-float Calc_Heat_Index(byte sta_n, float TempF)  {    // Calculate Heat Index
-  //HI = -42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH - 0.00683783*T*T - 0.05481717*RH*RH + 0.00122874*T*T*RH + 0.00085282*T*RH*RH - 0.00000199*T*T*RH*RH
-  //HI = heat index (Deg)
-  //T = air temperature (Deg) (T  > 18 Deg C or T > 57 Deg F)
-  //RH = relative humidity (%)
+// ***********   Calculate Heat Index
+float Calc_Heat_Index(byte sta_n, float TempF)  {
+  /* HI = -42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH - 0.00683783*T*T - 0.05481717*RH*RH + 0.00122874*T*T*RH + 0.00085282*T*RH*RH - 0.00000199*T*T*RH*RH
+     HI = heat index (Deg F)
+     T  = air temperature (Deg F) (T  > 18 Deg C or T > 57 Deg F)
+     RH = relative humidity (%)
+  */
   float Rel_Humid = Calc_Rel_Humid(sta_n);          // Calculate Relative Humidity
 
   float Heat_Index = (-42.379 + (2.04901523 * TempF) + (10.14333127 * Rel_Humid)  - (0.22475541 * TempF * Rel_Humid)  - (0.00683783 * TempF * TempF)  - (0.05481717 * Rel_Humid * Rel_Humid)  + (0.00122874 * TempF * TempF * Rel_Humid)  + (0.00085282 * TempF * Rel_Humid * Rel_Humid)  - (0.00000199 * TempF * TempF * Rel_Humid * Rel_Humid) - 32 ) * 5 / 9;
+  // Converted to Deg C
   return Heat_Index;
 }
 
 
-float Calc_Wind_Chill(byte sta_n)  {     // Calculate Wind Chill
-  // Wind_Chill = 13.12 + 0.6215 * Tair - 11.37 * POWER(wind_speed,0.16)+0.3965 * Tair * POWER(wind_speed,0.16)
+// ***********   Calculate Wind Chill
+float Calc_Wind_Chill(byte sta_n)  {
+  /*If wind_speed KTS > 3 && temperature <= 14 Deg C
+    Wind_Chill = 13.12 + 0.6215 * Tair - 11.37 * POWER(wind_speed,0.16)+0.3965 * Tair * POWER(wind_speed,0.16)
+  */
   int Wind_Speed = Wind[sta_n].toInt();
   float wind_speed = Wind_Speed * 1.852; // Convert to Kph
 
@@ -2085,3 +2096,22 @@ float Calc_Wind_Chill(byte sta_n)  {     // Calculate Wind Chill
   return Wind_Chill;
 }
 
+// ***********   Calculate Density Altitude
+float Calc_Density_Alt(byte sta_n)  {
+  /*If Elevation is 5000 feet and Altimeter is 30.09 and Temperature(OAT) is 28*C
+    Pressure Altitude =  5000 + (( 29.92 - 30.09 ) * 1000 )
+    Standard Temperature is 15 degrees C at sea level and Normal temperature rate is 2*C per 1000
+    Temperature difference for 5000 ft is 15*C – 10*C [2*C per 1000 ft] = 5*C
+    Temp Altitude = ( 120 * (28*C – 5*C)
+    Temp Altitude = 120 * (OAT – Temp diff)
+    Density Altitude = 5000 + ( 120 * (28*C – 5*C)
+    Density Altitude = Pressure Altitude + Temp Altitude in feet
+  */
+  float elevationF = Elevation[sta_n] * 3.28;    //  to Feet
+  float Press_Alt = elevationF + (1000 * (29.92 - Altim[sta_n]));    // in Feet
+  float Temp_Alt = 120 * (TempC[sta_n] - (15 - (2 * elevationF / 1000)));    // in Feet
+  
+  float Density_Alt = Press_Alt + Temp_Alt;   // in Feet
+  //Serial.printf("No:%2i   [Altim =%5.2f / Elev =%6.1f] Press_Alt =%6.1f  +  [TempC =%5.1f] Temp_Alt =%.1f  =  Density_Alt =%.1f\n", sta_n, Altim[sta_n], elevationF, Press_Alt, TempC[sta_n], Temp_Alt, Density_Alt);
+  return Density_Alt;
+}
