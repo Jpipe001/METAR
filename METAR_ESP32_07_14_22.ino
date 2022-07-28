@@ -2102,7 +2102,7 @@ float Calc_Density_Alt(byte sta_n)  {
     Pressure Altitude =  5000 + (( 29.92 - 30.09 ) * 1000 )
     Standard Temperature is 15 degrees C at sea level and Normal temperature rate is 2*C per 1000
     Temperature difference for 5000 ft is 15*C – 10*C [2*C per 1000 ft] = 5*C
-    Temp Altitude = ( 120 * (28*C – 5*C)
+    Temp Altitude = 120 * (28*C – 5*C)
     Temp Altitude = 120 * (OAT – Temp diff)
     Density Altitude = 5000 + ( 120 * (28*C – 5*C)
     Density Altitude = Pressure Altitude + Temp Altitude in feet
