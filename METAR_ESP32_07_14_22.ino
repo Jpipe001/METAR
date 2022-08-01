@@ -1,5 +1,5 @@
 /*
-  07/28/2022  Latest Software on Github : https://github.com/Jpipe001/METAR  << Check for Latest Update
+  08/01/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -67,12 +67,9 @@
 
   //  RECENT CHANGES:
   
-  Changed to Printf  06/12/22
-  Changed Vis/Temp/Press Display Colors a Little 06/26/22
-  Added Remarks to Display Summary 07/29/22
-  ENTERED Station Can be set to Any Station 07/04/22
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
-  Made things a Little Better  07/28/22
+  Cleaned up Remarks  08/01/22
+  Made things a Little Better  08/01/22
 */
 
 //#include <Arduino.h>
@@ -99,8 +96,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network Settings:
-const char*      ssid = "your network name";          // your network SSID (name)
-const char*  password = "your network password";      // your network password
+/const char*      ssid = "your network name";          // your network SSID (name)
+/const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
@@ -113,7 +110,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 
 
 // Set Up LEDS
-#define No_Stations          52      // Number of Stations also Number of LEDs
+#define No_Stations          52      // Number of Stations / Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
 #define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With ***  330 to 500 Ohm Resistor
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
@@ -131,13 +128,13 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KVPC, CARTERSVILLE, GA     ",        // 3
   "KATL, ATLANTA, GA          ",        // 4  First FIVE Characters are REQUIRED !!
   "KCTJ, CARROLTON, GA        ",        // 5
-  "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station name
-  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "commas" (Syntax Important).
-  "KMCN, MACON, GA            ",        // 8  Padding after station name is not necessary.
-  "KCKF, CORDELLE, GA         ",        // 9
-  "KABY, ALBANY, GA           ",        // 10 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
+  "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station Name.
+  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
+  "KMCN, MACON, GA            ",        // 8  Padding after Station Name is not necessary.
+  "KCKF, CORDELLE, GA         ",        // 9  You can customise the Station Name.
+  "KABY, ALBANY, GA           ",        // 10
   "KTLH, TALLAHASSEE, FL      ",        // 11
-  "KVLD, VALDOSTA, GA         ",        // 12
+  "KVLD, VALDOSTA, GA         ",        // 12 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
   "KAYS, WAYCROSS, GA         ",        // 13
   "KJAX, JACKSONVILLE, FL     ",        // 14
   "KBQK, BRUNSWICK, GA        ",        // 15
@@ -182,11 +179,11 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KJAX, JACKSONVILLE, FL     ",        // 54
   "KTIX, TITUSVILLE, FL       ",        // 55
   "KDAB, DAYTONA BEACH, FL    ",        // 56
-  "NULL, STATION NAME         ",        // 57  (NULL for No Airport Example)
+  "NULL, STATION NAME         ",        // 57 (NULL for No Airport Example) useful to have LED but not use it.
   "KAGS, AUGUSTA, GA          ",        // 58
   "KAHN, ATHENS, GA           ",        // 59
   "KCEU, CLEMSON, GA          ",        // 60
-};                                      // << Do NOT change this line
+};                                      // << Do NOT change this line.
 
 //  ################   END OF SETTINGS  ################
 
@@ -271,7 +268,7 @@ void setup() {
   wifiMulti.addAP(ssid, password);
 
   if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
-    Serial.printf("\nSOMETHING WENT WRONG\nError setting up MDNS responder!\nProgram halted  ~  Check Network Settings!!\n");
+    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings!\nError setting up MDNS responder!\n");
     while (1) {
       delay(1000);                   // Stay here
     }
@@ -596,15 +593,18 @@ void Decodedata(byte i, String station, String Parsed_metar) {
 
     // *** CREATE  Remark : Codes to Text
     // StationMetar[i]    Station Metar Codes including "new" & "ago"
-    //StationRemark[i]    Station Remark Codes including "brackets"
-    //       Remark[i]    Station Remark Codes, Overwrites to Final Remark for Station (text)
-    String Metar_Code = Parsed_metar.substring(search_Strt, search_End);    // Station Metar code not including "new" "station" & "ago"
+    //StationRemark[i]    Station Remark Codes used in Sumary Display
+    //       Remark[i]    Station Remark Codes, Overwrites to Decoded Remark for Station (text)
+
+    String Metar_Code = Parsed_metar.substring(search_Strt, search_End);    // Station Metar code NOT including "new" "station" & "ago"
+
+    StationRemark[i] = Parsed_metar.substring(search_End, search_Raw_Text);     // Station Remark code NOT including Brackets in Sumary Display
 
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
-    StationRemark[i] = Remark[i];    // Station Remark code including "brackets" above
 
+    
     // ***  OPTIONAL  ***  To print UPDATED Stations or For Troubleshooting : Print Parsed_metar
-    //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), StationRemark[i].c_str());
+    //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), Remark[i].c_str());
 
 
     // DECODING Remark  (Mainly REMOVE unwanted codes)
@@ -1187,8 +1187,8 @@ String Decode_Weather(String weather) {
   weather.replace("LTtoG", "to Ground");
   weather.replace("CA", "and Cloud to Air");
 
-  weather.replace("ALQDS", "All Quadrents");
-  weather.replace("ALQS", "All Quadrents");
+  weather.replace("ALQDS", "All Quadrents ");
+  weather.replace("ALQS", "All Quadrents ");
   weather.replace("DIST", "Distant");
   weather.replace("DSTN", "Distant");
   weather.replace("DSNT", "Distant");
@@ -1747,7 +1747,7 @@ void Go_Server ( void * pvParameters ) {
                 client.print(html_code);
 
                 // Display SUMMARY Table ***********
-                String Deg = "Deg C";       // Set Temperature Units C or F   ***  For Fahrenheit : Change this to "Deg F"  ***
+                String Deg = "Deg F";       // Set Temperature Units C or F   ***  For Fahrenheit : Change this to "Deg F"  ***
 
                 html_code = "<TABLE BORDER='2' CELLPADDING='5'>";
                 html_code += "<TR><TD>No:</TD><TD>Station<BR><CENTER>ID</CENTER></TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>from</TD><TD>WIND<BR>Speed</TD><TD>TEMP<BR>";
@@ -1982,14 +1982,14 @@ void Go_Server ( void * pvParameters ) {
                     if (TempC[sta_n] >= 35.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd HOT</I></FONT>";
 
                     // Don't display Heat Index unless Temperature > 18 Deg C  and  Heat Index > Temperature
-                    float Heat_Index = Calc_Heat_Index(sta_n, TempF);             // Calculate Heat_Index
+                    float Heat_Index = Calc_Heat_Index(sta_n);             // *** Calculate Heat_Index
                     if (TempC[sta_n] >= 18  &&  Heat_Index >= TempC[sta_n]) {
                       html_code += "<BR><FONT COLOR='Purple'>" + String(Heat_Index, 1) +  " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Heat_Index * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspHeat Index</FONT>";
                     }
 
-                    // Don't display Wind Chill unless Wind Speed is greater than 3 KTS and Temperature is less than 14 Deg C
+                    // Don't display Wind Chill unless Wind Speed > 3 KTS and Temperature < 14 Deg C
                     if (Wind[sta_n].toInt() > 3 && TempC[sta_n] <= 10) {     //  Nugged this down
-                      float Wind_Chill = Calc_Wind_Chill(sta_n);             // Calculate Wind Chill
+                      float Wind_Chill = Calc_Wind_Chill(sta_n);             // *** Calculate Wind Chill
                       if (Wind_Chill <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Purple'>";
                       html_code += "<BR>" + String(Wind_Chill, 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Wind_Chill * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspWind Chill</FONT>";
                     }
@@ -2002,7 +2002,7 @@ void Go_Server ( void * pvParameters ) {
                   else  {
                     html_code += String(DewptC[sta_n], 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(DewptC[sta_n] * 1.8 + 32, 1) + " Deg F</FONT>";
                     if (DewptC[sta_n] >= 24.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd Muggy</I></FONT>";
-                    float Rel_Humid = Calc_Rel_Humid(sta_n);             // Calculate Relative Humidity
+                    float Rel_Humid = Calc_Rel_Humid(sta_n);             // *** Calculate Relative Humidity
                     html_code += "<BR><FONT COLOR='Purple'>" + String(Rel_Humid, 0) + " %</FONT>";
                   }
 
@@ -2026,8 +2026,8 @@ void Go_Server ( void * pvParameters ) {
                   html_code += "</TD></TR><TR><TD>Elevation</TD><TD>" + String(Elevation[sta_n], 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Elevation[sta_n] * 3.28, 1) + " Ft</TD></TR>";
 
                   html_code += "<TR><TD>Estimated Density Altitude</TD><TD>";
-                  float Density_Alt = Calc_Density_Alt(sta_n);             // Calculate Density Altitude
-                  if (TempC[sta_n] == 0 || Altim[sta_n] == 0)   html_code += "NA</TD></TR>"; else  html_code += String(Density_Alt / 3.28, 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Density_Alt, 1)+ " Ft</TD></TR>";
+                  float Density_Alt = Calc_Density_Alt(sta_n);             // *** Calculate Density Altitude
+                  if (TempC[sta_n] == 0 || Altim[sta_n] == 0)   html_code += "NA</TD></TR>"; else  html_code += String(Density_Alt / 3.28, 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Density_Alt, 1) + " Ft</TD></TR>";
 
                   html_code += "</TABLE>";             //  End of Table in Station
                   client.print(html_code);
@@ -2069,17 +2069,15 @@ float Calc_Rel_Humid(byte sta_n)  {
 
 
 // ***********   Calculate Heat Index
-float Calc_Heat_Index(byte sta_n, float TempF)  {
+float Calc_Heat_Index(byte sta_n)  {
   /* HI = -42.379 + 2.04901523*T + 10.14333127*RH - 0.22475541*T*RH - 0.00683783*T*T - 0.05481717*RH*RH + 0.00122874*T*T*RH + 0.00085282*T*RH*RH - 0.00000199*T*T*RH*RH
-     HI = heat index (Deg F)
-     T  = air temperature (Deg F) (T  > 18 Deg C or T > 57 Deg F)
+     T  = air temperature (Deg F) [if T  > 18 Deg C > 57 Deg F]
      RH = relative humidity (%)
   */
   float Rel_Humid = Calc_Rel_Humid(sta_n);          // Calculate Relative Humidity
-
-  float Heat_Index = (-42.379 + (2.04901523 * TempF) + (10.14333127 * Rel_Humid)  - (0.22475541 * TempF * Rel_Humid)  - (0.00683783 * TempF * TempF)  - (0.05481717 * Rel_Humid * Rel_Humid)  + (0.00122874 * TempF * TempF * Rel_Humid)  + (0.00085282 * TempF * Rel_Humid * Rel_Humid)  - (0.00000199 * TempF * TempF * Rel_Humid * Rel_Humid) - 32 ) * 5 / 9;
-  // Converted to Deg C
-  return Heat_Index;
+  float Temp = TempC[sta_n] * 1.8 + 32;  // Deg F
+  float Heat_Index = (-42.379 + (2.04901523 * Temp) + (10.14333127 * Rel_Humid) - (0.22475541 * Temp * Rel_Humid) - (0.00683783 * Temp * Temp) - (0.05481717 * Rel_Humid * Rel_Humid)  + (0.00122874 * Temp * Temp * Rel_Humid) + (0.00085282 * Temp * Rel_Humid * Rel_Humid) - (0.00000199 * Temp * Temp * Rel_Humid * Rel_Humid) - 32 ) * 5 / 9;
+  return Heat_Index;  // Converted to Deg C
 }
 
 
@@ -2098,20 +2096,20 @@ float Calc_Wind_Chill(byte sta_n)  {
 
 // ***********   Calculate Density Altitude
 float Calc_Density_Alt(byte sta_n)  {
-  /*If Elevation is 5000 feet and Altimeter is 30.09 and Temperature(OAT) is 28*C
+  /*Example: Elevation is 5000 feet and Altimeter is 30.09 [QNH] and Temperature(OAT) is 28*C
     Pressure Altitude =  5000 + (( 29.92 - 30.09 ) * 1000 )
-    Standard Temperature is 15 degrees C at sea level and Normal temperature rate is 2*C per 1000
-    Temperature difference for 5000 ft is 15*C – 10*C [2*C per 1000 ft] = 5*C
+    Standard Temperature is 15 degrees C at sea level and Std temperature rate is 2*C per 1000
+    Std Temperature difference for 5000 ft is 15*C – 10*C [2*C per 1000 ft] = 5*C
+    Aproximation for Temp Altitude = 120 * (OAT – Temp diff)
     Temp Altitude = 120 * (28*C – 5*C)
-    Temp Altitude = 120 * (OAT – Temp diff)
-    Density Altitude = 5000 + ( 120 * (28*C – 5*C)
     Density Altitude = Pressure Altitude + Temp Altitude in feet
   */
   float elevationF = Elevation[sta_n] * 3.28;    //  to Feet
   float Press_Alt = elevationF + (1000 * (29.92 - Altim[sta_n]));    // in Feet
   float Temp_Alt = 120 * (TempC[sta_n] - (15 - (2 * elevationF / 1000)));    // in Feet
-  
+
   float Density_Alt = Press_Alt + Temp_Alt;   // in Feet
-  //Serial.printf("No:%2i   [Altim =%5.2f / Elev =%6.1f] Press_Alt =%6.1f  +  [TempC =%5.1f] Temp_Alt =%.1f  =  Density_Alt =%.1f\n", sta_n, Altim[sta_n], elevationF, Press_Alt, TempC[sta_n], Temp_Alt, Density_Alt);
+  // For Troubleshooting:
+  //Serial.printf("No:%2i   [Altim =%5.2f / Elev =%6.1f] Press_Alt =%6.1f  +  [TempC =%5.1f] Temp_Alt =%7.1f  =  Density_Alt =%.1f\n", sta_n, Altim[sta_n], elevationF, Press_Alt, TempC[sta_n], Temp_Alt, Density_Alt);
   return Density_Alt;
 }
