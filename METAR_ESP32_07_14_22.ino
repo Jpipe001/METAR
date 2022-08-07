@@ -1,5 +1,5 @@
 /*
-  08/01/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+  08/06/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -10,8 +10,9 @@
   https://youtu.be/xPlN_Tk3VLQ    Getting Started with ESP32 video from DroneBot Workshop.
 
   https://www.aviationweather.gov/docs/metar/Stations.txt    List of ALL Stations Codes(Worldwide FAA Data Base).
-  https://aeronav.faa.gov/visual/01-27-2022/PDFs/     FAA Wall Chart downloads and then edit to suit.
-
+  https://aeronav.faa.gov/visual/01-27-2022/     FAA Wall Chart downloads and then edit to suit.
+  https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/     FAA Chart downloads.
+  
   ###################################################################################################
 
   This software, the ideas and concepts is Copyright (c). All rights to this software are reserved.
@@ -46,13 +47,17 @@
   (Watch Getting Started with ESP32 video from DroneBot Workshop, link above).
 
   Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
-  A set of WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
-  Then cycles through all the stations and flashes individually for:
-  Wind Gusts(Cyan)[suspendable], Precipitation(Green/White), Ice(Blue), Other(Yellow) and Significant Change(Orange).
-  Then displays "RAINBOW" for all stations, for Visibility [White to Red], Wind Speed Gradient [Cyan],
-  Temperature Gradient [Blue Green Yellow Orange Red] and Altimeter Pressure Gradient [Blue to Purple].
+  A set of WS2811 or WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
+  Then cycles through each station and flashes individually, if there is Significant Weather:
+  Wind Gusts(Cyan), Precipitation(Green/White), Ice(Blue) and Other(Yellow). [See Display Weather on LEDS]
+  
+  Then displays "RAINBOW" for all stations, [See Display Metar/Show Loops]:
+  Visibility [Red-Pink-White]                  (Useful to see Visibility Variations [IFR])
+  Wind Speed Gradient  [Shades of Aqua]        (Useful to see Pressure Gradients)
+  Temperature Gradient [Blue-Green-Yellow-Red] (Useful to see Frontal Progression)
+  Altimeter Pressure Gradient [Blue-Purple]    (Useful to see Pressure Distribution [and Hurricanes])
 
-  DISPLAYS: Viewable with a computer or cell phone connected to the SAME network:
+  TABULAR DISPLAYS: Viewable with a computer or cell phone connected to the SAME network:
   SUMMARY html gives a colorful overview and
   STATION html shows DECODED METAR information and much MORE.  (See Below for Improvements)
 
@@ -66,13 +71,58 @@
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
   //  RECENT CHANGES:
-  
+  Modified Significant Weather to include Cloud Cover, RVR & Weather 12/31/19
+  Changed to a TIMED 6 Minute METAR read and update 01/07
+  Added for Ice and Hail (Blue) 01/30
+  Added Capability to select ANY Airport Code 02/02
+  Added Summary to HTML 03/04
+  Cleaned up Update_Time & loop 03/08
+  Added User 03/10
+  Added Cloud_base Change Arrows 03/13
+  Added Alt Pressure Change Arrows 03/13
+  Added Yellow Misc Weather 03/24
+  Added Observation Time 04/01
+  Added Orange Info Changes 04/05
+  Cleaned up Parse_Metar 04/14
+  Added Wind Changes 04/30
+  Added Pressure Display 05/06
+  Modified Visibility Display 05/15
+  Modified Variable Types 05/15
+  Tweaked Rainbow Displays 05/21
+  Dual Core: Main_Loop Task1 Core0; Go_Server Task2 Core1 05/24
+  Modified Server Update Time 05/30
+  More little tweaks 06/01
+  Messing with memory storage 06/15
+  Modified to HTTPS 06/23
+  REMOVED from remark "Welcome User" 07/11
+  Modified the URL address 10/03
+  Changed Temperature Display Colors 10/29
+  Logical Address to the server with http://metar.local 10/29/20
+  Added Remarks 02/11/21
+  Modified Dictionary 04/14/21
+  Modified HTML 04/29/21
+  Fixed rem pointer error 05/18/21
+  Removed Flashing Sig Weather 07/12/21
+  Added debug print of remarks 07/30/21
+  More Readable, Modified Dictionary 08/27/21
+  More Reliable, More Modified Dictionary 01/19/22
+  Modified to Summary Page to Jump to a Station 03/2/22
+  Few minor Tweaks 03/11/22
+  Reading Codes Backwards 03/14/22
+  Modified Dictionary 03/22/22
+  Modified Search 04/04/22
+  Added Wind to remarks 04/04/22
+  Changed to Printf  06/12/22
+  Changed Vis/Temp/Press Display Colors a Little 06/26/22
+  Added Remarks to Display Summary 07/29/22
+  ENTERED Station Can be set to Any Station 07/04/22
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
   Cleaned up Remarks  08/01/22
-  Made things a Little Better  08/01/22
+  Added to Altimeter  08/04/22
+  Made things a Little Better  08/06/22
 */
 
-//#include <Arduino.h>
+#include <Arduino.h>
 #include <FastLED.h>      // FastLED  by Daniel Garcia
 #include <WiFiMulti.h>    // WifiMulti_Generic  by Khoi Hoang
 WiFiMulti wifiMulti;
@@ -129,7 +179,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KATL, ATLANTA, GA          ",        // 4  First FIVE Characters are REQUIRED !!
   "KCTJ, CARROLTON, GA        ",        // 5
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station Name.
-  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
+  "KCSG, COLUMBUS, GA         ",        // 7  Include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
   "KMCN, MACON, GA            ",        // 8  Padding after Station Name is not necessary.
   "KCKF, CORDELLE, GA         ",        // 9  You can customise the Station Name.
   "KABY, ALBANY, GA           ",        // 10
@@ -200,7 +250,7 @@ PROGMEM float          Visab[No_Stations + 1];   // Visibility
 PROGMEM String           Sky[No_Stations + 1];   // Sky_cover
 PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
 PROGMEM int   old_cloud_base[No_Stations + 1];   // Previous Cloud Base
-PROGMEM float        Seapres[No_Stations + 1];   // Sea Level Pressure
+PROGMEM float        Seapres[No_Stations + 1];   // Mean Sea Level Pressure
 PROGMEM float          Altim[No_Stations + 1];   // Altimeter setting
 PROGMEM float      old_Altim[No_Stations + 1];   // Previous altimeter setting
 PROGMEM float      Elevation[No_Stations + 1];   // Elevation setting
@@ -268,7 +318,7 @@ void setup() {
   wifiMulti.addAP(ssid, password);
 
   if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
-    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings!\nError setting up MDNS responder!\n");
+    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings!!\nError setting up MDNS responder!\n");
     while (1) {
       delay(1000);                   // Stay here
     }
@@ -349,15 +399,15 @@ void Main_Loop( void * pvParameters ) {
 // ***********   Display Metar/Show Loops
 void Display_Metar_LEDS () {
   int Wait_Time = 5000;             //  Delay after Loop (Seconds * 1000)
-
-  // ***********   Comment these lines out to suspend a function
-
-  Display_Weather_LEDS (10);        //  Display Twinkle Weather
+  Display_Weather_LEDS (10);        //  Display Twinkle Weather (Useful to see Significant Weather)
   delay(8000);                      //  Delay after Loop (Seconds * 1000) ~~ Do NOT Remove
-  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White]
-  //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]
-  Display_Temp_LEDS (Wait_Time);    //  Display Temperatures [Blue-Green-Yellow-Red]
-  Display_Alt_LEDS (Wait_Time);     //  Display Distribution of Pressure [Blue-Purple]
+  
+  // ***********   Comment these lines out to suspend a Display function
+
+  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White] (Useful to see Visibility Variations [IFR])
+  //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]  (Useful to see Pressure Gradients)
+  Display_Temp_LEDS (Wait_Time);    //  Display Temperatures Variations [Blue-Green-Yellow-Red] (Useful to see Frontal Progression)
+  Display_Alt_LEDS (Wait_Time);     //  Display Variations of Pressure [Blue-Purple] (Useful to see Pressure Distribution [and Hurricanes])
 }
 
 
@@ -620,7 +670,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     }
 
 
-    //  ****  REMOVE   SLPnnn   Sea Level Pressure  12-hour mean
+    //  ****  REMOVE   SLPnnn   Sea Level Pressure  12-hour Mean
     search2 = Remark[i].indexOf(" SLP");
     search3 = Remark[i].indexOf(" ", search2 + 1);
     if (search3 - search2 == 6)  search3 = -1;                    // If SLPNO
@@ -1028,7 +1078,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     if (search0 < 13) Altim[i] = 0;  else  Altim[i] = Parsed_metar.substring(search0, search1).toFloat();
     //    float Pressure = Altim[i]; // in_hg
 
-    // Searching <sea_level_pressure_mb
+    // Searching <sea_level_pressure_mb  ~  ( Mean Sea Level Pressure )
     search0 = Parsed_metar.indexOf("<sea_level_pressure_mb>") + 23;
     if (search0 < 23) Seapres[i] = 0;  else  Seapres[i] = Parsed_metar.substring(search0, search0 + 6).toFloat();
 
@@ -1309,7 +1359,7 @@ String Decode_Weather(String weather) {
   weather.replace("TS", " Thunderstorm");
 
   weather.replace("RainG", "Ragged ");
-  weather.replace("TR", "Trace");
+  weather.replace("TR", "Trace ");
   weather.replace("RE", "<br>Recent:");
 
   weather.replace("RF", "Rainfall ");
@@ -1562,7 +1612,7 @@ void Display_Wind_LEDS (int wait) {
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
     byte hue = 160 - TempC[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
-    leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
+    leds[i - 1] = CHSV( hue, 180, 140);   // ( hue, sat, bright )
     if (TempC[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
@@ -1608,7 +1658,6 @@ void Go_Server ( void * pvParameters ) {
   float diff_in_press  = 0.045;   // Significant CHANGE IN PRESSURE
   String header;                  // Header for Server
   int sta_n = 1;
-  byte wx_flag;
   byte Station_Flag = 1;
   byte Summary_Flag = 1;
   String html_code;
@@ -1817,7 +1866,7 @@ void Go_Server ( void * pvParameters ) {
                     else client.print(color + String(TempF, 1) + "</FONT></TD>");
 
                     // Display Altimeter in SUMMARY
-                    wx_flag = 0;
+                      byte wx_flag = 0;
                     if (old_Altim[i] > 0.1)   {
                       if (Altim[i] >= old_Altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
                       if (Altim[i] <= old_Altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
@@ -2007,7 +2056,7 @@ void Go_Server ( void * pvParameters ) {
                   }
 
                   //  Altimeter in STATION
-                  html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" + String(Altim[sta_n]) + "&nbspin&nbspHg&nbsp&nbsp";
+                  html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" +  String(Altim[sta_n] * 1013.2 / 29.92, 1) + " mBar&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Altim[sta_n], 2) + " in&nbspHg&nbsp&nbsp";
                   if (old_Altim[sta_n] > 0)  {
                     if (Altim[sta_n] > old_Altim[sta_n]) {
                       if (Altim[sta_n] > old_Altim[sta_n] + diff_in_press)  html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
@@ -2034,8 +2083,8 @@ void Go_Server ( void * pvParameters ) {
 
                   // Display Foooter and Close
                   html_code = "<BR><FONT SIZE='-1'>File Name: " + String(ShortFileName);
-                  html_code += "<BR>H/W Address &nbsp: " + HW_addr;
-                  html_code += "<BR>URL Address &nbsp: " + SW_addr;
+                  html_code += "<BR>H/W Address &nbsp: " + String(HW_addr);
+                  html_code += "<BR>URL Address &nbsp: " + String(SW_addr);
                   html_code += "<BR><B>Dedicated to : F. Hugh Magee</B>";
                   html_code += "</FONT></BODY></html>";
                   client.print(html_code);
