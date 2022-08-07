@@ -46,7 +46,7 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 + METAR Station Display Example:
 
 
-![image](https://user-images.githubusercontent.com/24758833/180670094-4c4649e6-6704-46a9-b432-c7110f66e7db.png)
+![image](https://user-images.githubusercontent.com/24758833/183297159-c19801f8-f4aa-4bc4-815a-bca285adbfa8.png)
 
 
 + See Additional Remarks/Comments in the program file.
