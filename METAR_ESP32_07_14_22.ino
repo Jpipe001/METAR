@@ -70,41 +70,7 @@
   Includes: Decoded Metar, Current UTC Time, Temperature in Deg F, Elevation Ft, Estimated Density Altitude Ft.
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
-  //  RECENT CHANGES:
-  Modified Significant Weather to include Cloud Cover, RVR & Weather 12/31/19
-  Changed to a TIMED 6 Minute METAR read and update 01/07
-  Added for Ice and Hail (Blue) 01/30
-  Added Capability to select ANY Airport Code 02/02
-  Added Summary to HTML 03/04
-  Cleaned up Update_Time & loop 03/08
-  Added User 03/10
-  Added Cloud_base Change Arrows 03/13
-  Added Alt Pressure Change Arrows 03/13
-  Added Yellow Misc Weather 03/24
-  Added Observation Time 04/01
-  Added Orange Info Changes 04/05
-  Cleaned up Parse_Metar 04/14
-  Added Wind Changes 04/30
-  Added Pressure Display 05/06
-  Modified Visibility Display 05/15
-  Modified Variable Types 05/15
-  Tweaked Rainbow Displays 05/21
-  Dual Core: Main_Loop Task1 Core0; Go_Server Task2 Core1 05/24
-  Modified Server Update Time 05/30
-  More little tweaks 06/01
-  Messing with memory storage 06/15
-  Modified to HTTPS 06/23
-  REMOVED from remark "Welcome User" 07/11
-  Modified the URL address 10/03
-  Changed Temperature Display Colors 10/29
-  Logical Address to the server with http://metar.local 10/29/20
-  Added Remarks 02/11/21
-  Modified Dictionary 04/14/21
-  Modified HTML 04/29/21
-  Fixed rem pointer error 05/18/21
-  Removed Flashing Sig Weather 07/12/21
-  Added debug print of remarks 07/30/21
-  More Readable, Modified Dictionary 08/27/21
+  //  RECENT CHANGES
   More Reliable, More Modified Dictionary 01/19/22
   Modified to Summary Page to Jump to a Station 03/2/22
   Few minor Tweaks 03/11/22
