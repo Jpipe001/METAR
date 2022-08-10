@@ -1,5 +1,5 @@
 /*
-  08/06/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+  08/09/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -10,9 +10,8 @@
   https://youtu.be/xPlN_Tk3VLQ    Getting Started with ESP32 video from DroneBot Workshop.
 
   https://www.aviationweather.gov/docs/metar/Stations.txt    List of ALL Stations Codes(Worldwide FAA Data Base).
-  https://aeronav.faa.gov/visual/01-27-2022/     FAA Wall Chart downloads and then edit to suit.
-  https://www.faa.gov/air_traffic/flight_info/aeronav/digital_products/     FAA Chart downloads.
-  
+  https://aeronav.faa.gov/visual/01-27-2022/PDFs/     FAA Wall Chart downloads and then edit to suit.
+
   ###################################################################################################
 
   This software, the ideas and concepts is Copyright (c). All rights to this software are reserved.
@@ -47,17 +46,13 @@
   (Watch Getting Started with ESP32 video from DroneBot Workshop, link above).
 
   Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
-  A set of WS2811 or WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
-  Then cycles through each station and flashes individually, if there is Significant Weather:
-  Wind Gusts(Cyan), Precipitation(Green/White), Ice(Blue) and Other(Yellow). [See Display Weather on LEDS]
-  
-  Then displays "RAINBOW" for all stations, [See Display Metar/Show Loops]:
-  Visibility [Red-Pink-White]                  (Useful to see Visibility Variations [IFR])
-  Wind Speed Gradient  [Shades of Aqua]        (Useful to see Pressure Gradients)
-  Temperature Gradient [Blue-Green-Yellow-Red] (Useful to see Frontal Progression)
-  Altimeter Pressure Gradient [Blue-Purple]    (Useful to see Pressure Distribution [and Hurricanes])
+  A set of WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
+  Then cycles through all the stations and flashes individually for:
+  Wind Gusts(Cyan)[suspendable], Precipitation(Green/White), Ice(Blue), Other(Yellow) and Significant Change(Orange).
+  Then displays "RAINBOW" for all stations, for Visibility [White to Red], Wind Speed Gradient [Cyan],
+  Temperature Gradient [Blue Green Yellow Orange Red] and Altimeter Pressure Gradient [Blue to Purple].
 
-  TABULAR DISPLAYS: Viewable with a computer or cell phone connected to the SAME network:
+  DISPLAYS: Viewable with a computer or cell phone connected to the SAME network:
   SUMMARY html gives a colorful overview and
   STATION html shows DECODED METAR information and much MORE.  (See Below for Improvements)
 
@@ -70,22 +65,12 @@
   Includes: Decoded Metar, Current UTC Time, Temperature in Deg F, Elevation Ft, Estimated Density Altitude Ft.
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
-  //  RECENT CHANGES
-  More Reliable, More Modified Dictionary 01/19/22
-  Modified to Summary Page to Jump to a Station 03/2/22
-  Few minor Tweaks 03/11/22
-  Reading Codes Backwards 03/14/22
-  Modified Dictionary 03/22/22
-  Modified Search 04/04/22
-  Added Wind to remarks 04/04/22
-  Changed to Printf  06/12/22
-  Changed Vis/Temp/Press Display Colors a Little 06/26/22
-  Added Remarks to Display Summary 07/29/22
-  ENTERED Station Can be set to Any Station 07/04/22
+  //  RECENT CHANGES:
+  Started this project 10/31/19
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
   Cleaned up Remarks  08/01/22
-  Added to Altimeter  08/04/22
-  Made things a Little Better  08/06/22
+  Added to Alitmeter 08/04/22
+  Made things a Little Better  08/09/22
 */
 
 #include <Arduino.h>
@@ -145,7 +130,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT change this li
   "KATL, ATLANTA, GA          ",        // 4  First FIVE Characters are REQUIRED !!
   "KCTJ, CARROLTON, GA        ",        // 5
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station Name.
-  "KCSG, COLUMBUS, GA         ",        // 7  Include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
+  "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
   "KMCN, MACON, GA            ",        // 8  Padding after Station Name is not necessary.
   "KCKF, CORDELLE, GA         ",        // 9  You can customise the Station Name.
   "KABY, ALBANY, GA           ",        // 10
@@ -216,7 +201,7 @@ PROGMEM float          Visab[No_Stations + 1];   // Visibility
 PROGMEM String           Sky[No_Stations + 1];   // Sky_cover
 PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
 PROGMEM int   old_cloud_base[No_Stations + 1];   // Previous Cloud Base
-PROGMEM float        Seapres[No_Stations + 1];   // Mean Sea Level Pressure
+PROGMEM float        Seapres[No_Stations + 1];   // Sea Level Pressure
 PROGMEM float          Altim[No_Stations + 1];   // Altimeter setting
 PROGMEM float      old_Altim[No_Stations + 1];   // Previous altimeter setting
 PROGMEM float      Elevation[No_Stations + 1];   // Elevation setting
@@ -365,15 +350,15 @@ void Main_Loop( void * pvParameters ) {
 // ***********   Display Metar/Show Loops
 void Display_Metar_LEDS () {
   int Wait_Time = 5000;             //  Delay after Loop (Seconds * 1000)
-  Display_Weather_LEDS (10);        //  Display Twinkle Weather (Useful to see Significant Weather)
-  delay(8000);                      //  Delay after Loop (Seconds * 1000) ~~ Do NOT Remove
-  
-  // ***********   Comment these lines out to suspend a Display function
 
-  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White] (Useful to see Visibility Variations [IFR])
-  //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]  (Useful to see Pressure Gradients)
-  Display_Temp_LEDS (Wait_Time);    //  Display Temperatures Variations [Blue-Green-Yellow-Red] (Useful to see Frontal Progression)
-  Display_Alt_LEDS (Wait_Time);     //  Display Variations of Pressure [Blue-Purple] (Useful to see Pressure Distribution [and Hurricanes])
+  // ***********   Comment these lines out to suspend a function
+
+  Display_Weather_LEDS (10);        //  Display Twinkle Weather
+  delay(8000);                      //  Delay after Loop (Seconds * 1000) ~~ Do NOT Remove
+  Display_Vis_LEDS (Wait_Time);     //  Display Visibility [Red-Pink-White]
+  //Display_Wind_LEDS (Wait_Time);    //  Display Wind Speed [Shades of Aqua]
+  Display_Temp_LEDS (Wait_Time);    //  Display Temperatures [Blue-Green-Yellow-Red]
+  Display_Alt_LEDS (Wait_Time);     //  Display Distribution of Pressure [Blue-Purple]
 }
 
 
@@ -533,8 +518,8 @@ void ParseMetar(byte i) {
     Visab[i] = 0;                   // Not Found
     wDir[i] = "NA";                 // Not Found
     Wind[i] = "NA";                 // Not Found
-    TempC[i] = 0;                    // Not Found
-    DewptC[i] = 0;                   // Not Found
+    TempC[i] = 0;                   // Not Found
+    DewptC[i] = 0;                  // Not Found
     Altim[i] = 0;                   // Not Found
     old_Altim[i] = 0;               // Not Found
     Remark[i] = "";                 // Not Found
@@ -618,7 +603,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
 
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
 
-    
+
     // ***  OPTIONAL  ***  To print UPDATED Stations or For Troubleshooting : Print Parsed_metar
     //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), Remark[i].c_str());
 
@@ -636,7 +621,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     }
 
 
-    //  ****  REMOVE   SLPnnn   Sea Level Pressure  12-hour Mean
+    //  ****  REMOVE   SLPnnn   Sea Level Pressure  12-hour mean
     search2 = Remark[i].indexOf(" SLP");
     search3 = Remark[i].indexOf(" ", search2 + 1);
     if (search3 - search2 == 6)  search3 = -1;                    // If SLPNO
@@ -1044,7 +1029,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     if (search0 < 13) Altim[i] = 0;  else  Altim[i] = Parsed_metar.substring(search0, search1).toFloat();
     //    float Pressure = Altim[i]; // in_hg
 
-    // Searching <sea_level_pressure_mb  ~  ( Mean Sea Level Pressure )
+    // Searching <sea_level_pressure_mb
     search0 = Parsed_metar.indexOf("<sea_level_pressure_mb>") + 23;
     if (search0 < 23) Seapres[i] = 0;  else  Seapres[i] = Parsed_metar.substring(search0, search0 + 6).toFloat();
 
@@ -1102,6 +1087,7 @@ String Decode_Weather(String weather) {
   weather.replace("FROIN", " Frost On The Indicator ");
   weather.replace("ALSTG", " Alitmeter Setting");
   weather.replace("ALTSTG", " Alitmeter Setting");
+  weather.replace("AT AP", "At Airport");
 
   weather.replace("SLPNO", " Sea Level Pressure NA ");
   weather.replace("PNO", " Rain Gauge NA ");
@@ -1538,12 +1524,12 @@ void Display_Cat_LEDS () {
 
 // *********** Set Category for One Station LED
 void Set_Cat_LED (byte i)  {
-  if (Category[i] == "VFR" ) leds[i - 1] = CRGB::DarkGreen;
+  if (Category[i] == "VFR")  leds[i - 1] = CRGB::DarkGreen;
   if (Category[i] == "MVFR") leds[i - 1] = CRGB::DarkBlue;
-  if (Category[i] == "IFR" ) leds[i - 1] = CRGB::DarkRed;
+  if (Category[i] == "IFR")  leds[i - 1] = CRGB::DarkRed;
   if (Category[i] == "LIFR") leds[i - 1] = CRGB::DarkMagenta;
-  if (Category[i] == "NA" )  leds[i - 1] = CRGB(20, 20, 0); // DIM  Yellowish
-  if (Category[i] == "NF" )  leds[i - 1] = CRGB::Black;
+  if (Category[i] == "NA")   leds[i - 1] = CRGB(20, 20, 0); // DIM  Yellowish
+  if (Category[i] == "NF")   leds[i - 1] = CRGB::Black;
 }
 
 
@@ -1578,7 +1564,7 @@ void Display_Wind_LEDS (int wait) {
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
     byte hue = 160 - TempC[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
-    leds[i - 1] = CHSV( hue, 180, 140);   // ( hue, sat, bright )
+    leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
     if (TempC[i] == 0 || Category[i].substring(0, 1) == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
@@ -1762,12 +1748,13 @@ void Go_Server ( void * pvParameters ) {
                 client.print(html_code);
 
                 // Display SUMMARY Table ***********
-                String Deg = "Deg F";       // Set Temperature Units C or F   ***  For Fahrenheit : Change this to "Deg F"  ***
+                
+                String Deg = "TEMP<BR>Deg F";      // Set Temperature Units   ******  For Celsius : Change this to "TEMP<BR>Deg C"  ******
+                String Alt = "ALT<BR>in Hg";       // Set Altimeter Units     ******  For mBar : Change this to "ALT<BR>mBar"  ******
 
                 html_code = "<TABLE BORDER='2' CELLPADDING='5'>";
-                html_code += "<TR><TD>No:</TD><TD>Station<BR><CENTER>ID</CENTER></TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>from</TD><TD>WIND<BR>Speed</TD><TD>TEMP<BR>";
-                html_code += Deg;
-                html_code += "</TD><TD>ALT<BR>in&nbspHg</TD><TD>REMARKS</TD></TR>";
+                html_code += "<TR><TD>No:</TD><TD>Station<BR><CENTER>ID</CENTER></TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>from</TD><TD>WIND<BR>Speed</TD><TD>";
+                html_code += Deg + "</TD><TD>" + Alt + "</TD><TD>Metar & Remark Codes</TD></TR>";
                 client.print(html_code);
 
                 for (int i = 0; i < (No_Stations + 1); i++) {
@@ -1817,10 +1804,9 @@ void Go_Server ( void * pvParameters ) {
                       int diff = oldDir - newDir;
                       if (diff < 0)      diff = newDir - oldDir;
                       if (diff > 300)    diff = 360 - diff;
-                      if (diff > 30)     client.print("<TD BGCOLOR='MistyRose'><FONT COLOR='Purple'>" + wDir[i]);
-                      else   client.print(color + wDir[i]);
-                    }  else   client.print(color + wDir[i]);
-                    client.print(F("</FONT></TD>"));
+                      if (diff > 30)     client.print("<TD BGCOLOR='MistyRose'><FONT COLOR='Purple'>" + wDir[i] + "</FONT></TD>");
+                      else   client.print(color + wDir[i] + "</FONT></TD>");
+                    }  else   client.print(color + wDir[i] + "</FONT></TD>");
 
                     // Display Wind Speed in SUMMARY
                     client.print(color + Wind[i] + "</FONT></TD>");
@@ -1831,18 +1817,20 @@ void Go_Server ( void * pvParameters ) {
                     else if (Deg == "Deg C")   client.print(color + String(TempC[i], 1) + "</FONT></TD>");
                     else client.print(color + String(TempF, 1) + "</FONT></TD>");
 
-                    // Display Altimeter in SUMMARY
-                      byte wx_flag = 0;
+                    // Display Altimeter in SUMMARY  ***  Set Pressure Units See Above (Display SUMMARY Table)  ***
+                    byte wx_flag = 0;
+                    float Altm = Altim[i];
+                    if (Alt == "ALT<BR>mBar")  Altm = Altim[i] * 1013.2 / 29.92;
                     if (old_Altim[i] > 0.1)   {
                       if (Altim[i] >= old_Altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
                       if (Altim[i] <= old_Altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
-                      if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(Altim[i]));
-                      else  client.print(color + String(Altim[i]));
+                      if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(Altm, 2));
+                      else  client.print(color + String(Altm, 2));
                       if (Altim[i] > old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
                       if (Altim[i] < old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
                       if (Altim[i] == old_Altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
                     }  else  {
-                      client.print(color + String(Altim[i]));
+                      client.print(color + String(Altm, 2));
                     }
                     client.print(F("</FONT></TD>"));
 
@@ -2003,7 +1991,7 @@ void Go_Server ( void * pvParameters ) {
                     }
 
                     // Don't display Wind Chill unless Wind Speed > 3 KTS and Temperature < 14 Deg C
-                    if (Wind[sta_n].toInt() > 3 && TempC[sta_n] <= 10) {     //  Nugged this down
+                    if (Wind[sta_n].toInt() > 3 && TempC[sta_n] < 10) {      //  Nugged this down
                       float Wind_Chill = Calc_Wind_Chill(sta_n);             // *** Calculate Wind Chill
                       if (Wind_Chill <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Purple'>";
                       html_code += "<BR>" + String(Wind_Chill, 1) + " Deg C&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Wind_Chill * 1.8 + 32, 1) + " Deg F&nbsp&nbsp&nbspWind Chill</FONT>";
@@ -2023,6 +2011,7 @@ void Go_Server ( void * pvParameters ) {
 
                   //  Altimeter in STATION
                   html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" +  String(Altim[sta_n] * 1013.2 / 29.92, 1) + " mBar&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Altim[sta_n], 2) + " in&nbspHg&nbsp&nbsp";
+
                   if (old_Altim[sta_n] > 0)  {
                     if (Altim[sta_n] > old_Altim[sta_n]) {
                       if (Altim[sta_n] > old_Altim[sta_n] + diff_in_press)  html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
@@ -2037,6 +2026,7 @@ void Go_Server ( void * pvParameters ) {
                     if (Altim[sta_n] == old_Altim[sta_n])   html_code += "&rArr; Steady";   //right arrow
                   }
 
+
                   //  Elevation & Density Altitude in STATION
                   html_code += "</TD></TR><TR><TD>Elevation</TD><TD>" + String(Elevation[sta_n], 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Elevation[sta_n] * 3.28, 1) + " Ft</TD></TR>";
 
@@ -2049,8 +2039,8 @@ void Go_Server ( void * pvParameters ) {
 
                   // Display Foooter and Close
                   html_code = "<BR><FONT SIZE='-1'>File Name: " + String(ShortFileName);
-                  html_code += "<BR>H/W Address &nbsp: " + String(HW_addr);
-                  html_code += "<BR>URL Address &nbsp: " + String(SW_addr);
+                  html_code += "<BR>H/W Address &nbsp: " + HW_addr;
+                  html_code += "<BR>URL Address &nbsp: " + SW_addr;
                   html_code += "<BR><B>Dedicated to : F. Hugh Magee</B>";
                   html_code += "</FONT></BODY></html>";
                   client.print(html_code);
@@ -2122,9 +2112,6 @@ float Calc_Density_Alt(byte sta_n)  {
   float elevationF = Elevation[sta_n] * 3.28;    //  to Feet
   float Press_Alt = elevationF + (1000 * (29.92 - Altim[sta_n]));    // in Feet
   float Temp_Alt = 120 * (TempC[sta_n] - (15 - (2 * elevationF / 1000)));    // in Feet
-
   float Density_Alt = Press_Alt + Temp_Alt;   // in Feet
-  // For Troubleshooting:
-  //Serial.printf("No:%2i   [Altim =%5.2f / Elev =%6.1f] Press_Alt =%6.1f  +  [TempC =%5.1f] Temp_Alt =%7.1f  =  Density_Alt =%.1f\n", sta_n, Altim[sta_n], elevationF, Press_Alt, TempC[sta_n], Temp_Alt, Density_Alt);
   return Density_Alt;
 }
