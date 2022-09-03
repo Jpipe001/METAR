@@ -1,5 +1,5 @@
 /*
-  08/09/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+  09/02/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -61,16 +61,73 @@
 
   Makes a GREAT Christmas Tree Chain of Lights, TOO (and a Good Conversation Piece).
 
+  OPTIONAL:
+   In Main Loop: Turn LEDS OFF at NIGHT  7PM to 8AM ~ Local Time ~ Enabled
+   In Main Loop: Reduce LED Power usage while getting Data ~ Disabled
+   In Display_Metar_LEDS: "Rainbow" Effect ~ Partially Enabled
+   In Parsed_metar: Print Stations that were Updated  ~ Disabled
+   In Checking AIRPORT CODE: Airport Code can be assigned to any Station No ~ Disabled Set to 0
+
   MADE THINGS A LITTLE BETTER, BUG FIXES, IMPROVEMENTS, REPAIRS TO TIME-SPACE CONTINUUM, ETC, ETC.
   Includes: Decoded Metar, Current UTC Time, Temperature in Deg F, Elevation Ft, Estimated Density Altitude Ft.
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
   //  RECENT CHANGES:
   Started this project 10/31/19
+  Modified Significant Weather to include Cloud Cover, RVR & Weather 12/31/19
+  Changed to a TIMED 6 Minute METAR read and update 01/07
+  Added for Ice and Hail (Blue) 01/30
+  Added Capability to select ANY Airport Code 02/02
+  Added Summary to HTML 03/04
+  Cleaned up Update_Time & loop 03/08
+  Added User 03/10
+  Added Cloud_base Change Arrows 03/13
+  Added Alt Pressure Change Arrows 03/13
+  Added Yellow Misc Weather 03/24
+  Added Observation Time 04/01
+  Added Orange Info Changes 04/05
+  Cleaned up Parse_Metar 04/14
+  Added Wind Changes 04/30
+  Added Pressure Display 05/06
+  Modified Visibility Display 05/15
+  Modified Variable Types 05/15
+  Tweaked Rainbow Displays 05/21
+  Dual Core: Main_Loop Task1 Core0; Go_Server Task2 Core1 05/24
+  Modified Server Update Time 05/30
+  More little tweaks 06/01
+  Messing with memory storage 06/15
+  Modified to HTTPS 06/23
+  REMOVED from remark "Welcome User" 07/11
+  Modified the URL address 10/03
+  Changed Temperature Display Colors 10/29
+  Logical Address to the server with http://metar.local 10/29/20
+  Added Remarks 02/11/21
+  Modified Dictionary 04/14/21
+  Modified HTML 04/29/21
+  Fixed rem pointer error 05/18/21
+  Removed Flashing Sig Weather 07/12/21
+  Added debug print of remarks 07/30/21
+  More Readable, Modified Dictionary 08/27/21
+  More Reliable, More Modified Dictionary 01/19/22
+  Modified to Summary Page to Jump to a Station 03/2/22
+  Few minor Tweaks 03/11/22
+  Reading Codes Backwards 03/14/22
+  Modified Dictionary 03/22/22
+  Modified Search 04/04/22
+  Added Wind to remarks 04/04/22
+  Changed to Printf  06/12/22
+  Changed Vis/Temp/Press Display Colors a Little 06/26/22
+  Added Remarks to Display Summary 07/29/22
+  ENTERED Station Can be set to Any Station 07/04/22
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
-  Cleaned up Remarks  08/01/22
+  Cleaned up Remarks 08/01/22
   Added to Alitmeter 08/04/22
-  Made things a Little Better  08/09/22
+  Optional to Reduce LED Power usage while getting Data 08/09/22
+  Improved Error Handling in GetData 08/18/22
+  Added Ago Update in Displays 08/24/22
+  Added "LIGHTS OUT" at 7PM 08/26/22
+  Made things a Little Better 08/26/22
+  Improvements to the Time-Space Continuum
 */
 
 #include <Arduino.h>
@@ -111,14 +168,15 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 
 
 // Set Up LEDS
-#define No_Stations          52      // Number of Stations / Number of LEDs
+#define No_Stations          60      // Number of Stations / Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
 #define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With ***  330 to 500 Ohm Resistor
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
 #define COLOR_ORDER         GRB      // WS2811 are RGB or WS2812 are GRB or NEOPIXEL are CRGB
-#define BRIGHTNESS           20      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
+#define BRIGHTNESS           18      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
 #define FRAMES_PER_SECOND   120
 CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB for Displaying Gradients
+
 
 
 // Define STATIONS Variables      ~~~~~      Some Examples
@@ -215,7 +273,7 @@ byte Hour;                    // Latest Hour
 byte Minute;                  // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min;             // Last Update Minute
-byte Group_of_Stations = 18;  // Get a Group of <18 Stations at a time
+byte Group_of_Stations = 21;  // Get a Group of <30 Stations at a time
 byte Update_Interval = 6;     // Updates Data every 6 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down;              // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
@@ -318,6 +376,21 @@ void Main_Loop( void * pvParameters ) {
     Last_Up_Min = Minute;
     Update_Time();                   // Update Current Time : Hour & Minute
 
+
+    //  Optional Turn LEDS OFF at NIGHT  7PM to 8AM ~ Local Time
+    // Suspends Getting Data and Display Leds ~ Delete this if not required
+    byte  On_Hr = 12;     // 8AM =  8:00Hr + 4 = 12 Hr UTC  ~ ON
+    byte Off_Hr = 21;     // 7PM = 19:00Hr + 4 = 21 Hr UTC  ~ OFF : Suspend Function
+
+    if (Hour == Off_Hr)  {               // Check for Off Hour
+      while (Hour != On_Hr)  {           // Loop until On Hour
+        Display_Black_LEDS();            // Set All LEDS to Black
+        delay(60 * 1000);                // Wait a Minute 60 Seconds
+        Update_Time();                   // Update Current Time : Hour & Minute
+      }
+    }
+
+
     if (Last_Up_Min + Update_Interval > 60)   Last_Up_Min = 60 - Update_Interval;
     Count_Down = Last_Up_Min + Update_Interval - Minute;
 
@@ -332,17 +405,20 @@ void Main_Loop( void * pvParameters ) {
     }
     delay(200);                      // Wait a smidgen
     Comms_Flag = 1;                  // Communication Flag 1=Active
+    // Optional to Reduce LED Power usage while getting Data
+    //Display_Black_LEDS();            // Set All LEDS to Black to Reduce Power before getting Data
     GetAllMetars();                  // Get All Metars and Display Categories
     Comms_Flag = 0;                  // Communication Flag 0=Reset
 
     Serial.printf("%s\tMetar Data Updated\tNext Update in %d Mins\n", Clock, Count_Down);
 
     while (Count_Down > 0)    {
-      Display_Metar_LEDS ();         // Display Station Metar/Show Loops
+      Display_Metar_LEDS();          // Display Station Metar/Show Loops
       Update_Time();                 // Update CurrentTime : Hour & Minute
       Count_Down = Last_Up_Min + Update_Interval - Minute;
       if (Count_Down > Update_Interval)   Count_Down = 0;
     }
+
   }
 }
 
@@ -383,10 +459,16 @@ void Init_LEDS() {
   FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, No_Stations).setCorrection(TypicalLEDStrip); // For WS2811 or WS2812
   //FastLED.addLeds<NEOPIXEL, DATA_PIN>(leds, NUM_LEDS);       // For NEOPIXEL
   FastLED.setBrightness(BRIGHTNESS);           // Set master brightness control (<12=Dim 20=ok >20=Too Bright)
-  fill_solid(leds, No_Stations, CRGB::Black);  // Set all leds to Black
-  FastLED.show();
-  delay(100);    // Wait a smidgen
+  Display_Black_LEDS();                        // Set All LEDS to Black
   Serial.printf("LEDs Initialized for No_Stations = %d\n", No_Stations);
+}
+
+
+// *********** Reset LEDS to Black (Start Up & before Get Data)
+void Display_Black_LEDS () {
+  fill_solid(leds, No_Stations, CRGB::Black);  // Set All leds to Black
+  FastLED.show();
+  delay(50);    // Wait a smidgen
 }
 
 
@@ -401,12 +483,6 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
       String station = Stations[i].substring(0, 5);
       url = url + String(station);
     }
-    byte len = url.length();
-    url = url.substring(0, len - 1);  // Remove last "comma"
-
-    // For Troubleshooting:
-    //Serial.println("In GetAllMetars url = " + url);
-
     GetData(url, Start);              // GET Some Metar Data (Group of Stations at a time) - GetData Routine
     for (byte i = Start; i <= Finish; i++) {
       ParseMetar(i);                  // One Station at a time - ParseMetar Routine
@@ -417,55 +493,44 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
 
 // *********** GET Some Metar Data/Name Group of Stations at a time
 void GetData(String url, byte i) {
-  MetarData = "";                     // Reset Raw Data for Group of Stations <20 at a time
+  MetarData = "";                     // Reset Raw Data for Group of Stations
 
   if (url == "NAME") url = host + urls + Stations[i];  else   url = host + urlb + url;
+  url = url.substring(0, url.length() - 1);    // Remove last "comma"
 
   if (wifiMulti.run() == WL_CONNECTED)  {
-    digitalWrite(LED_BUILTIN, HIGH);  // ON
+    //digitalWrite(LED_BUILTIN, HIGH);    // ON ~~ Only For Troubleshooting
     HTTPClient https;
     https.begin(url);
     //  Start connection and send HTTP header
     httpCode = https.GET();
-    // httpCode will be negative on error so check
-    if (httpCode > 0 ) {
+    // httpCode will be negative on error so test or 200 for HTTP_CODE_OK
+
+    if (httpCode == 200 ) {              // HTTP_CODE_OK
       // HTTP header has been send and Server response header has been handled
-      // and File found at server
-      if (httpCode == HTTP_CODE_OK) {
+      // and File FOUND at server. Get back : httpCode = 200 (HTTP_CODE_OK)
 
-        // For Troubleshooting : Check Max Allocated Heap
-        //Serial.println("In GetData #" + String(i) + "\tMax Allocated Heap\t= " + String(ESP.getMaxAllocHeap()));
+      MetarData = https.getString();     // SAVE DATA in MetarData
 
-        MetarData = https.getString();
-      } else {
-        //  httpCode may still have positive Error so Double Check
-        Serial.printf("\tIn GetData No: %d", i);
-        Serial.printf("\tDouble Check for Error = %d : %s\n", httpCode, https.errorToString(httpCode).c_str());
+      https.end();                       // CLOSE Communications
+      digitalWrite(LED_BUILTIN, LOW);    // OFF
 
-      }
-      https.end();                     // Communication HTTP_CODE_OK
-      digitalWrite(LED_BUILTIN, LOW);  //OFF
+      if (ESP.getMaxAllocHeap() - MetarData.length() < 10000) httpCode = -100;  // RUNNING OUT OF MEMORY : NO UPDATE in ParseMetar
 
-      // For Troubleshooting : Check What is the size of MetarData
-      //Serial.printf("\tIn GetData  No: %d\tMetarData Size  = %d\n", i, MetarData.length());
+      // For Troubleshooting : Print url, Check Max Allocated Heap, MetarData Size & Print MetarData
+      //Serial.printf("%s\tIn GetData  No: %d\turl = %s\n", Clock, i, url.c_str());
+      //Serial.printf("%s\tIn GetData  No: %d\tHTTP_CODE = %d : %s\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
+      //Serial.printf("%s\tIn GetData  No: %d\tHeap=%5d  MetarData=%5d  Free=%5d\n", Clock, i, ESP.getMaxAllocHeap(), MetarData.length(), ESP.getMaxAllocHeap() - MetarData.length());
+      //Serial.printf("\tIn GetData  MetarData No: %d:\n%s\n", i, MetarData.c_str());
 
-    } else {
-      https.end();                     // Communication HTTP Error
-      digitalWrite(LED_BUILTIN, LOW);  //OFF
-      Serial.printf("%s\tNo:%d \tCommunication Error in GetData = ", Clock, i);
-      Serial.printf("%d : %s \n", httpCode, https.errorToString(httpCode).c_str());
+    }  else  {                           // HTTP_CODE has a negative ERROR
 
-      //Communication Error httpCode = -11 : read Timeout DON'T Print
-      if (httpCode != -11)  {
-        Network_Status ();              // WiFi Network Error
-        // For Troubleshooting
-        //Serial.printf("In GetData : url = %s\n", url.c_str());
-        //Serial.printf("In GetData : \nMetarData = %s\n", MetarData.c_str());
-      }
+      https.end();                       // CLOSE Communications
+      digitalWrite(LED_BUILTIN, LOW);    // OFF
+      Serial.printf("%s\tIn GetData  No: %d\tCommunication Error = %4d : %s\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
+
+      Network_Status ();                 // WiFi Network Error
     }
-  } else {
-    Serial.printf("In GetData : ");
-    Network_Status ();                 // WiFi Network Error
   }
 }
 
@@ -488,32 +553,36 @@ void Network_Status () {
 void ParseMetar(byte i) {
   String Parsed_metar = "";
   String station = Stations[i].substring(0, 4);
-  if (station == "NULL")   return;
+  if (station == "NULL")   return;      // No Update  No Station
+  if (httpCode < 0 )   return;          // No Update  Communication Error
 
-  int Data_Start = MetarData.indexOf(station);                      // Search for Station ID
-  int Data_End  = MetarData.indexOf("</METAR>", Data_Start + 1);    // Search for "data end"
-  if (Data_Start > 0 && Data_End > 0)    {
+  int Data_Start = MetarData.indexOf(station, 0);      // Search for Station ID
+  int Data_End  = MetarData.indexOf("</METAR>", Data_Start + 1) + 8;    // Search for data end "</METAR>"
+
+  // For Troubleshooting :
+  //Serial.printf("In ParseMetar : i = %d\tStation = .%s.  Data_Start = %6d\tData_End = %6d\tMetarData.length = %6d\n", i, station.c_str(), Data_Start, Data_End, MetarData.length());
+
+  if (Data_Start > 0)    {     // STATION FOUND
     Parsed_metar = MetarData.substring(Data_Start, Data_End);       // Parse Metar Data
+
     // Remove found data from MetarData
     MetarData = MetarData.substring(0, Data_Start) + MetarData.substring(Data_End, MetarData.length());
 
     Decodedata(i, station, Parsed_metar);                           // DECODE the Station DATA
 
-  } else {
-    // Station NOT found or NOT reporting
+  } else {                    // STATION NOT FOUND
+
+    Serial.printf("%s\tNo:%d\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station.c_str());
+
     //Communication Error httpCode = -11 : read Timeout DON'T Print
-    if (httpCode != -11)   {
-      Serial.printf("%s\tNo:%d\t%s\tStation Not Reporting, Skipping this one in ParseMetar\n", Clock, i, station.c_str());
-      if (Data_Start < 0 && Data_End < 0 )
-        Serial.printf("\t\tLikely Communication or Station Code Error\n");
-    }
+    if (httpCode < 0)    Serial.printf("\t\tLikely Communication or Station Code Error\n");
 
     //Reset All Parameters if Not Found
     Category[i] = "NF";             // Not Found
     Sky[i] = "NA";                  // Not Found
-    StationMetar[i] = "Station Not Reporting";
     StationRemark[i] = "";
-    if (httpCode != HTTP_CODE_OK)  StationMetar[i] = "Internet Connection Error";
+    StationMetar[i] = "Station Not Reporting";
+    if (httpCode != HTTP_CODE_OK)  StationMetar[i] = "Connection Error";
     Sig_Weather[i] = "Not Found";   // Not Found
     Visab[i] = 0;                   // Not Found
     wDir[i] = "NA";                 // Not Found
@@ -531,8 +600,7 @@ void ParseMetar(byte i) {
 
 // *********** DECODE the Station DATA
 void Decodedata(byte i, String station, String Parsed_metar) {
-  String old_obs_time;
-  old_obs_time = StationMetar[i].substring(0, 4);                         // Previous Last Observation Time
+  String old_obs_time = StationMetar[i].substring(0, 4);                  // Previous Last Observation Time
   if (old_obs_time == "new ")  old_obs_time = StationMetar[i].substring(4, 8);
   // Otherwise old_obs_time = "" and will UPDATE later
 
@@ -568,7 +636,6 @@ void Decodedata(byte i, String station, String Parsed_metar) {
 
   // *** UPDATE/SKIP this Station *** : Check Last Observation Time with [Parsed_metar Observation Time] in StationMetar
   if (old_obs_time != StationMetar[i].substring(0, 4))   {      // If No Update : SKIP this Station
-
 
 
     // *** NEW DATA: UPDATING STATION
@@ -608,7 +675,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     //Serial.printf("Station No %d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), Remark[i].c_str());
 
 
-    // DECODING Remark  (Mainly REMOVE unwanted codes)
+    // DECODING Remark  (MAINLY REMOVE UNWANTED CODES)
 
     //  **** REMOVE   AO   Automated Station
     int search2 = Remark[i].indexOf(" AO");
@@ -992,6 +1059,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     search0 = Parsed_metar.indexOf("visibility_statute_mi") + 22;
     search1 = Parsed_metar.indexOf("</visibility");
     if (search0 < 22)  Visab[i] = 0;  else  Visab[i] = Parsed_metar.substring(search0, search1).toFloat();
+    if (search0 < 22)  Serial.printf("%s\tNo:%d\t%s\tVisibility Not Found, in Decodedata\n", Clock, i, station.c_str());
 
     // Searching  <sky_condition
     old_cloud_base[i] = new_cloud_base[i];
@@ -1014,6 +1082,7 @@ void Decodedata(byte i, String station, String Parsed_metar) {
     }
     if (Sky[i] == "NA")   new_cloud_base[i] = 0;
     if (Sky[i] == "NA")   old_cloud_base[i] = 0;
+    if (Sky[i] == "NA")  Serial.printf("%s\tNo:%d\t%s\tSky Cover Not Found, in Decodedata\n", Clock, i, station.c_str());
     // Vertical Visibility Searching <vert_vis_ft>
     search0 = Parsed_metar.indexOf("<vert_vis_ft>") + 13;
     if (search0 > 13)  {
@@ -1128,12 +1197,12 @@ String Decode_Weather(String weather) {
   weather.replace("THRU", "Thru");
   weather.replace("HR ", "Hour ");
   weather.replace("WSHFT", "Wind Shift");
-  weather.replace("ICG", "Icing");
-  weather.replace("PCPN", "Precip");
+  weather.replace("ICG", " Icing");
+  weather.replace("PCPN", " Precip");
   weather.replace("MTNS", " Mountains");
   weather.replace("MTS", " Mountains");
   weather.replace("ACC", "AC");
-  weather.replace("SNINCR", "Snow Increasing Rapidily");
+  weather.replace("SNINCR", " Snow Increasing Rapidily");
   weather.replace("ACFT MSHP", " Aircraft Mishap");
   weather.replace("STFD", "Staffed");
   weather.replace("FM", " From");
@@ -1528,8 +1597,8 @@ void Set_Cat_LED (byte i)  {
   if (Category[i] == "MVFR") leds[i - 1] = CRGB::DarkBlue;
   if (Category[i] == "IFR")  leds[i - 1] = CRGB::DarkRed;
   if (Category[i] == "LIFR") leds[i - 1] = CRGB::DarkMagenta;
-  if (Category[i] == "NA")   leds[i - 1] = CRGB(20, 20, 0); // DIM  Yellowish
   if (Category[i] == "NF")   leds[i - 1] = CRGB::Black;
+  if (Category[i] == "NA")   leds[i - 1] = CRGB(20, 20, 0); // DIM  Yellowish
 }
 
 
@@ -1659,8 +1728,8 @@ void Go_Server ( void * pvParameters ) {
                 if (sta_n == -1)  {           // Airport_Code NOT in Data base
                   sta_n = 0;                  // Normally Set to sta_n = 0; : ADD as Stations[0]
                   //sta_n = No_Stations;      // Can be set to Any Station For Troubleshooting (Set to overwrite last station)
-                  Stations[sta_n] = Airport_Code.c_str();
-                  Stations[sta_n] = Stations[sta_n] + ',';        // Add a Comma
+
+                  Stations[sta_n] = Airport_Code + ',';        // Add a Comma
                   StationMetar[sta_n] = "";
                   StationRemark[sta_n] = "";
                   new_cloud_base[sta_n] = 0;
@@ -1684,13 +1753,13 @@ void Go_Server ( void * pvParameters ) {
 
                   GetData("NAME", sta_n);     // GET Some Metar ~ Station NAME
                   Decode_Name(sta_n);         // Decode Station NAME
-                  GetData(Airport_Code, sta_n); // GET Some Metar ~ Station DATA
+                  GetData(Stations[sta_n].substring(0, 5), sta_n); // GET Some Metar ~ Station DATA
                   ParseMetar(sta_n);          // Parse Metar DATA
 
                   Comms_Flag = 0;             // Set Communication Flag 0=Reset
 
                   if (Category[sta_n] == "NF")   {   // Checking for Error in Station Name
-                    StationMetar[sta_n] = Airport_Code + " : Error in Station Name or NA";
+                    StationMetar[sta_n] = Airport_Code + " : Error in Station Name or Not Reporting";
                   }
                 }
                 Summary_Flag = 0;
@@ -1748,7 +1817,7 @@ void Go_Server ( void * pvParameters ) {
                 client.print(html_code);
 
                 // Display SUMMARY Table ***********
-                
+                Update_Time();                     //  GET CurrentTime : Hour & Minute
                 String Deg = "TEMP<BR>Deg F";      // Set Temperature Units   ******  For Celsius : Change this to "TEMP<BR>Deg C"  ******
                 String Alt = "ALT<BR>in Hg";       // Set Altimeter Units     ******  For mBar : Change this to "ALT<BR>mBar"  ******
 
@@ -1818,23 +1887,26 @@ void Go_Server ( void * pvParameters ) {
                     else client.print(color + String(TempF, 1) + "</FONT></TD>");
 
                     // Display Altimeter in SUMMARY  ***  Set Pressure Units See Above (Display SUMMARY Table)  ***
-                    byte wx_flag = 0;
-                    float Altm = Altim[i];
-                    if (Alt == "ALT<BR>mBar")  Altm = Altim[i] * 1013.2 / 29.92;
-                    if (old_Altim[i] > 0.1)   {
-                      if (Altim[i] >= old_Altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
-                      if (Altim[i] <= old_Altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
-                      if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(Altm, 2));
-                      else  client.print(color + String(Altm, 2));
-                      if (Altim[i] > old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
-                      if (Altim[i] < old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
-                      if (Altim[i] == old_Altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
-                    }  else  {
-                      client.print(color + String(Altm, 2));
+                    if (Altim[i] == 0)   client.print(color + "NA");   else  {
+                      byte wx_flag = 0;
+                      float Altm = Altim[i];
+                      if (Alt == "ALT<BR>mBar")  Altm = Altim[i] * 1013.2 / 29.92;
+                      if (old_Altim[i] > 0.1)   {
+                        if (Altim[i] >= old_Altim[i] + diff_in_press)  wx_flag = 1;    // Significant INCREASE in Pressure
+                        if (Altim[i] <= old_Altim[i] - diff_in_press)  wx_flag = 1;    // Significant DECREASE in Pressure
+                        if (wx_flag == 1) client.print("<TD BGCOLOR = 'MistyRose'><FONT COLOR='Purple'>" + String(Altm, 2));
+                        else  client.print(color + String(Altm, 2));
+                        if (Altim[i] > old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&uArr; ")); // up arrow
+                        if (Altim[i] < old_Altim[i])   client.print(F("<BR>&nbsp&nbsp&dArr; ")); // down arrow
+                        if (Altim[i] == old_Altim[i])  client.print(F("<BR>&nbsp&nbsp&rArr; ")); // right arrow
+                      }  else  {
+                        client.print(color + String(Altm, 2));
+                      }
                     }
                     client.print(F("</FONT></TD>"));
 
                     // Display Metar in SUMMARY
+                    Update_Ago(i);             //   Update Minutes Ago
                     if (StationMetar[i].substring(0, 3) == "new")  client.print(F("<TD><FONT COLOR='Purple'>"));  else  client.print(color);
                     client.print(StationMetar[i]);
 
@@ -1901,6 +1973,7 @@ void Go_Server ( void * pvParameters ) {
                   html_code += "<TR><TD>Flight Category</TD>" + color + "<B>" + String(Category[sta_n]) + "</B></FONT>  for " + String(Stations[sta_n]) + "</TD></TR>";
 
                   // Display Metar in STATION
+                  Update_Ago(sta_n);             //   Update Minutes Ago
                   html_code += "<TR><TD>Station Metar</TD>";
                   if (StationMetar[sta_n].substring(0, 3) == "new" )  html_code += "<TD><FONT COLOR='Purple'>" + String(StationMetar[sta_n]) + "</FONT>"; else  html_code += "<TD>" + String(StationMetar[sta_n]);
                   html_code += "</TD></TR>";
@@ -2010,8 +2083,9 @@ void Go_Server ( void * pvParameters ) {
                   }
 
                   //  Altimeter in STATION
-                  html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" +  String(Altim[sta_n] * 1013.2 / 29.92, 1) + " mBar&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Altim[sta_n], 2) + " in&nbspHg&nbsp&nbsp";
+                  if (Altim[sta_n] == 0)  html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>NA";   else
 
+                    html_code += "</TD></TR><TR><TD>Altimeter [QNH]</TD><TD>" +  String(Altim[sta_n] * 1013.2 / 29.92, 1) + " mBar&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Altim[sta_n], 2) + " in&nbspHg&nbsp&nbsp";
                   if (old_Altim[sta_n] > 0)  {
                     if (Altim[sta_n] > old_Altim[sta_n]) {
                       if (Altim[sta_n] > old_Altim[sta_n] + diff_in_press)  html_code += "<FONT COLOR='Orange'>Significant Change&nbsp</FONT>";
@@ -2060,6 +2134,20 @@ void Go_Server ( void * pvParameters ) {
     header = "";                   // Clear the header
     client.stop();                 // Close the Connection
   }
+}
+
+
+
+// ***********   Update Minutes Ago
+void Update_Ago(byte i)  {
+  int search0 = StationMetar[i].indexOf("Z");
+  byte obsh = StationMetar[i].substring(search0 - 4, search0 - 2).toInt();  // METAR Obs Time - Hour
+  byte obsm = StationMetar[i].substring(search0 - 2, search0).toInt();      // METAR Obs Time - Minute
+  int ago = ((Hour - obsh) * 60) + Minute - obsm;                           // Minutes Ago
+  if (ago < 0)    ago = ((24 - obsh) * 60) + Minute - obsm;
+  int search1 = StationMetar[i].indexOf("(");
+  if (search0 > 0 && search1 > 0)
+    StationMetar[i] =  StationMetar[i].substring(0, search1) + "(" + String(ago) + "m&nbspAgo)";
 }
 
 
