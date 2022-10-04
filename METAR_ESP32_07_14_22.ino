@@ -154,8 +154,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network Settings:
-//const char*      ssid = "your network name";          // your network SSID (name)
-//const char*  password = "your network password";      // your network password
+const char*      ssid = "your network name";          // your network SSID (name)
+const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
@@ -1556,7 +1556,6 @@ void Display_Weather_LEDS (int wait) {
 
 // ***********  Twinkle for Flashing Weather
 void Twinkle (int index, byte red, byte green, byte blue, byte pulses, int on_time, int off_time) {
-    if (index > 50)  index = 50;
   leds[index - 1].r = 0x00;    //  Red   Off
   leds[index - 1].g = 0x00;    //  Green Off
   leds[index - 1].b = 0x00;    //  Blue  Off
