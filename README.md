@@ -14,8 +14,9 @@ The number and names of the Stations are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
 
-+ WIRING OF LEDS : Three wires to  a set of WS2812 LEDS (Add a 220K to 330K resistor in the Data Line).
++ WIRING OF LEDS : Three wires to  a set of WS2812 LEDS (Add a 220 to 330 resistor in the Data Line).
 ![Hardware](https://user-images.githubusercontent.com/24758833/157292122-1b9d380f-331b-4fc7-8e6e-f1c82105f2ea.jpg)
+
 
 Note: With less than 50 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
 
