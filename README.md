@@ -15,8 +15,7 @@ The number and names of the Stations are Configurable for your application.
 + GETTING DATA : Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
 
 + WIRING OF LEDS : Three wires to  a set of WS2812 LEDS (Add a 220 to 330 resistor in the Data Line).
-![Hardware](https://user-images.githubusercontent.com/24758833/157292122-1b9d380f-331b-4fc7-8e6e-f1c82105f2ea.jpg)
-
+![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
 
 Note: With less than 50 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
 
@@ -41,7 +40,7 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 + METAR Summary Display Example:
 
 
-![image](https://user-images.githubusercontent.com/24758833/180669712-ec0df327-760a-49f8-941e-93d3c7773029.png)
+![METAR_Summary](https://user-images.githubusercontent.com/24758833/197342754-2bac1db7-003e-47b2-8072-c6f3a0c6f7f8.png)
 
 
 + METAR Station Display Example:
