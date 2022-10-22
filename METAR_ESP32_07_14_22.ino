@@ -1,5 +1,5 @@
 /*
-  10/01/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+  10/16/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -73,52 +73,6 @@
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
 
   //  RECENT CHANGES:
-  Started this project 10/31/19
-  Modified Significant Weather to include Cloud Cover, RVR & Weather 12/31/19
-  Changed to a TIMED 6 Minute METAR read and update 01/07
-  Added for Ice and Hail (Blue) 01/30
-  Added Capability to select ANY Airport Code 02/02
-  Added Summary to HTML 03/04
-  Cleaned up Update_Time & loop 03/08
-  Added User 03/10
-  Added Cloud_base Change Arrows 03/13
-  Added Alt Pressure Change Arrows 03/13
-  Added Yellow Misc Weather 03/24
-  Added Observation Time 04/01
-  Added Orange Info Changes 04/05
-  Cleaned up Parse_Metar 04/14
-  Added Wind Changes 04/30
-  Added Pressure Display 05/06
-  Modified Visibility Display 05/15
-  Modified Variable Types 05/15
-  Tweaked Rainbow Displays 05/21
-  Dual Core: Main_Loop Task1 Core0; Go_Server Task2 Core1 05/24
-  Modified Server Update Time 05/30
-  More little tweaks 06/01
-  Messing with memory storage 06/15
-  Modified to HTTPS 06/23
-  REMOVED from remark "Welcome User" 07/11
-  Modified the URL address 10/03
-  Changed Temperature Display Colors 10/29
-  Logical Address to the server with http://metar.local 10/29/20
-  Added Remarks 02/11/21
-  Modified Dictionary 04/14/21
-  Modified HTML 04/29/21
-  Fixed rem pointer error 05/18/21
-  Removed Flashing Sig Weather 07/12/21
-  Added debug print of remarks 07/30/21
-  More Readable, Modified Dictionary 08/27/21
-  More Reliable, More Modified Dictionary 01/19/22
-  Modified to Summary Page to Jump to a Station 03/2/22
-  Few minor Tweaks 03/11/22
-  Reading Codes Backwards 03/14/22
-  Modified Dictionary 03/22/22
-  Modified Search 04/04/22
-  Added Wind to remarks 04/04/22
-  Changed to Printf  06/12/22
-  Changed Vis/Temp/Press Display Colors a Little 06/26/22
-  Added Remarks to Display Summary 07/29/22
-  ENTERED Station Can be set to Any Station 07/04/22
   Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
   Cleaned up Remarks 08/01/22
   Added to Alitmeter 08/04/22
@@ -127,7 +81,8 @@
   Added Ago Update in Displays 08/24/22
   Added "LIGHTS OUT" at Night 08/26/22
   Made things a Little Better 08/26/22
-  Improvements to the Time-Space Continuum 10/01/22
+  Added "LIGHTS OUT" at Night 10/11/22
+  Improvements to the Time-Space Continuum 10/16/22
 */
 
 #include <Arduino.h>
@@ -154,8 +109,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network Settings:
-const char*      ssid = "your network name";          // your network SSID (name)
-const char*  password = "your network password";      // your network password
+//const char*      ssid = "your network name";          // your network SSID (name)
+//const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
@@ -170,7 +125,7 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 // Set Up LEDS
 #define No_Stations          60      // Number of Stations / Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
-#define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With ***  330 to 500 Ohm Resistor
+#define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With 220 to 330 Ohm Resistor in Line ***
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
 #define COLOR_ORDER         GRB      // WS2811 are RGB or WS2812 are GRB or NEOPIXEL are CRGB
 #define BRIGHTNESS           18      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
@@ -273,7 +228,7 @@ byte Hour = 0;                // Latest Hour
 byte Minute = 0;              // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min = 0;         // Last Update Minute
-byte Group_of_Stations = 22;  // Get a Group of <30 Stations at a time
+byte Group_of_Stations = 25;  // Get a Group of <28 Stations at a time
 byte Update_Interval = 6;     // Updates Data every 6 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down = 0;          // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
@@ -376,22 +331,18 @@ void Main_Loop( void * pvParameters ) {
     Last_Up_Min = Minute;
     Update_Time();                   // Update Current Time : Hour & Minute
 
-
     //  Optional Turn LEDS OFF at NIGHT  5PM to 8AM ~ Local Time
-    // Suspends Getting Data and Display Leds ~ Delete this if not required
     byte  On_Hr = 12;     // 8AM =  8:00Hr + 4 = 12 Hr UTC  ~ ON
     byte Off_Hr = 21;     // 5PM = 17:00Hr + 4 = 21 Hr UTC  ~ OFF : Suspend Function
+    // Off_Hr = 24;          // ****   To Not Invoke This
 
-    // ***********   Comment this out to suspend
-    /*
-        if (Hour == Off_Hr)  {               // Check for Off Hour
-          while (Hour != On_Hr)  {           // Loop until On Hour
-            Display_Black_LEDS();            // Set All LEDS to Black
-            delay(60 * 1000);                // Wait a Minute 60 Seconds
-            Update_Time();                   // Update Current Time : Hour & Minute
-          }
-        }
-    */
+    if (Hour == Off_Hr)  {               // Check for Off Hour
+      while (Hour != On_Hr)  {           // Loop until On Hour
+        Display_Black_LEDS();            // Set All LEDS to Black
+        delay(60 * 1000);                // Wait a Minute 60 Seconds
+        Update_Time();                   // Update Current Time : Hour & Minute
+      }
+    }
 
     if (Last_Up_Min + Update_Interval > 60)   Last_Up_Min = 60 - Update_Interval;
     Count_Down = Last_Up_Min + Update_Interval - Minute;
@@ -407,8 +358,7 @@ void Main_Loop( void * pvParameters ) {
     }
     delay(200);                      // Wait a smidgen
     Comms_Flag = 1;                  // Communication Flag 1=Active
-    // Optional to Reduce LED Power usage while getting Data
-    //Display_Black_LEDS();            // Set All LEDS to Black to Reduce Power before getting Data
+    //Display_Black_LEDS();          // Optional ~ To Reduce Power before getting Data Set All LEDS to Black
     GetAllMetars();                  // Get All Metars and Display Categories
     Comms_Flag = 0;                  // Communication Flag 0=Reset
 
@@ -433,7 +383,6 @@ void Display_Metar_LEDS() {
   // ***********   Comment these lines out to suspend a function
 
   int Wait_Time = 5000;             //  Delay after Function (Seconds * 1000) ~~ Change this but Do NOT Delete
-
   Display_Vis_LEDS (Wait_Time);     //  Display LEDS for Visibility [Red-Pink-White]
   //Display_Wind_LEDS (Wait_Time);    //  Display LEDS for Wind Speed [Shades of Aqua] ~ Suspended
   Display_Temp_LEDS (Wait_Time);    //  Display LEDS for Temperatures [Blue-Green-Yellow-Red]
@@ -487,9 +436,9 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
       String station = Stations[i].substring(0, 5);
       url = url + String(station);
     }
-    GetData(url, Start);              // GET Some Metar Data (Group of Stations at a time) - GetData Routine
+    GetData(url, Start);               // GetData Routine ~ Get Some Metar Data (Group of Stations at a time)
     for (int i = Start; i <= Finish; i++) {
-      ParseMetar(i);                  // One Station at a time - ParseMetar Routine
+      ParseMetar(i);                  // ParseMetar Routine ~ One Station at a time
     }
   }
 }
@@ -498,7 +447,6 @@ void GetAllMetars() {                    // Get a Group of Stations <20 at a tim
 // *********** GET Some Metar Data/Name Group of Stations at a time
 void GetData(String url, int i) {
   MetarData = "";                     // Reset Raw Data for Group of Stations
-
   if (url == "NAME") url = host + urls + Stations[i];  else   url = host + urlb + url;
   url = url.substring(0, url.length() - 1);    // Remove last "comma"
 
@@ -507,30 +455,31 @@ void GetData(String url, int i) {
     HTTPClient https;
     https.begin(url);                    // Start connection and send HTTP header
     httpCode = https.GET();              // httpCode will be negative on error so test or 200 for HTTP_CODE_OK
-
     if (httpCode == 200 ) {              // HTTP_CODE_OK
       // HTTP header has been send and Server response header has been handled
       // and File FOUND at server. Get back : httpCode = 200 (HTTP_CODE_OK)
-
       MetarData = https.getString();     // SAVE DATA in MetarData
-
       https.end();                       // CLOSE Communications
       digitalWrite(LED_BUILTIN, LOW);    // OFF
 
-      if (ESP.getMaxAllocHeap() - MetarData.length() < 10000) httpCode = -100;  // RUNNING OUT OF MEMORY : NO UPDATE in ParseMetar
-      if (httpCode == -100)  Serial.printf("%s\tNo:%d\tOut of Memory, in GetData\t MaxAllocHeap=%5d  MetarData=%5d  Free=%5d\n", Clock, i, ESP.getMaxAllocHeap(), MetarData.length(), ESP.getMaxAllocHeap() - MetarData.length());
+      // For Troubleshooting : Print url, MetarData Size, Check Max Allocated Heap & Print MetarData
+      //Serial.printf("%s\tNo:%d\tIn GetData : url=%s\n", Clock, i, url.substring(url.indexOf("stationString="), url.length()).c_str());
+      //Serial.printf("%s\tNo:%d\tIn GetData : MetarData=%d  MaxAllocHeap=%d  Free=%d  httpCode=%d ~ %s\n", Clock, i, MetarData.length(), ESP.getMaxAllocHeap(), ESP.getMaxAllocHeap() - MetarData.length(), httpCode, https.errorToString(httpCode).c_str());
+      //Serial.printf("%s\tNo:%d\tIn GetData : MetarData:\n%s\n", Clock, i, MetarData.c_str());
 
-      // For Troubleshooting : Print url, Check Max Allocated Heap, MetarData Size & Print MetarData
-      //Serial.printf("%s\tNo:%d\tIn GetData : url = %s\n", Clock, i, url.c_str());
-      //Serial.printf("%s\tNo:%d\tIn GetData : HTTP_CODE = %d : %s\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
-      //Serial.printf("%s\tNo:%d\tIn GetData : MaxAllocHeap=%5d  MetarData=%5d  Free=%5d\n", Clock, i, ESP.getMaxAllocHeap(), MetarData.length(), ESP.getMaxAllocHeap() - MetarData.length());
-      //Serial.printf("%s\tNo:%d\tIn GetData  MetarData:\n%s\n", Clock, i, MetarData.c_str());
+      if (ESP.getMaxAllocHeap() - MetarData.length() < 10500)   { // NO UPDATE : RUNNING LOW OF MEMORY
+        httpCode = -100;                                          // NO UPDATE for this Group of Stations, in ParseMetar
+        Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : Running Low on Memory\n", Clock, i);
+      }
+      if (MetarData.length() < 500)   {                           // NO UPDATE : NO MetarData DOWNLOADED
+        httpCode = -200;                                          // NO UPDATE for this Group of Stations, in ParseMetar
+        Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : No MetarData Downloaded\n", Clock, i);
+      }
 
-    }  else  {                           // CONNECTION ERROR ~ Note, NO UPDATE for this Group of Stations
+    }  else  {                           // CONNECTION ERROR : NO UPDATE for this Group of Stations, in ParseMetar
       https.end();                       // CLOSE Communications
       digitalWrite(LED_BUILTIN, LOW);    // OFF
-      Serial.printf("%s\tNo:%d\tConnection Error =%4d ~ %s, in GetData\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
-
+      Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : Connection Error=%d ~ %s\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
       Network_Status ();                 // WiFi Network Error
     }
   }
@@ -555,16 +504,20 @@ void Network_Status() {
 void ParseMetar(int i) {
   String Parsed_metar = "";
   String station = Stations[i].substring(0, 4);
-  if (station == "NULL")   return;      // No Update for this Station
-  if (httpCode < 0 )   return;          // Connection Error ~ NO UPDATE for Group of Stations
+  if (station == "NULL")   return;       // NO UPDATE for this Station
+  if (httpCode <= 0)  {                  // NO UPDATE ~ Connection Error or No Data Downloaded
+    if (StationMetar[i].indexOf("Skipped") < 0)   StationMetar[i] = "<FONT COLOR='Orange'>Skipped </FONT>" + StationMetar[i];
+    return;
+  }
 
-  int Data_Start = MetarData.indexOf(station, 0);      // Search for Station ID
+  int Data_Start = MetarData.indexOf(station, 0);                       // Search for Station ID
   int Data_End  = MetarData.indexOf("</METAR>", Data_Start + 1) + 8;    // Search for data end "</METAR>"
 
   // For Troubleshooting :
-  //Serial.printf("In ParseMetar : i = %d\tStation = .%s.  Data_Start = %6d\tData_End = %6d\tMetarData.length = %6d\n", i, station.c_str(), Data_Start, Data_End, MetarData.length());
+  //Serial.printf("%s\tNo:%d\t.%s.\tIn ParseMetar : StationMetar[i] = %s\n", Clock, i, station.c_str(), StationMetar[i].c_str());
+  //Serial.printf("%s\tNo:%d\t.%s.\tIn ParseMetar : Data_Start = %6d\tData_End = %6d\tMetarData.length = %6d\n", Clock, i, station.c_str(), Data_Start, Data_End, MetarData.length());
 
-  if (Data_Start > 0)    {     // STATION FOUND
+  if (Data_Start > 0)  {     // STATION FOUND
     Parsed_metar = MetarData.substring(Data_Start, Data_End);       // Parse Metar Data
 
     // Remove found data from MetarData
@@ -572,10 +525,8 @@ void ParseMetar(int i) {
 
     Decodedata(i, station, Parsed_metar);                           // DECODE the Station DATA
 
-  } else {                    // STATION NOT FOUND
+  } else {                  // STATION NOT FOUND
     Serial.printf("%s\tNo:%d\t%s\tStation Not Reporting, in ParseMetar\n", Clock, i, station.c_str());
-
-    if (httpCode < 0)    Serial.printf("\t\tLikely Connection or Station Code Error\n");
 
     //Reset All Parameters if Not Found
     Category[i] = "NF";             // Not Found
@@ -623,12 +574,11 @@ void Decodedata(int i, String station, String Parsed_metar) {
   if (search_End < search_From)  search_End = search_Raw_Text;             // Something is Wrong : Use Default for End
   if (search_End > search_Raw_Text)  search_End = search_Raw_Text;         // Something is Wrong : Use Default for End
 
-
   // Append Minutes ago updates on every cycle
-  Update_Time();                                                // Get Time : Hour & Minute
+  Update_Time();                                               // Get Time : Hour & Minute
   int obsh = Parsed_metar.substring(7, 9).toInt();             // METAR Obs Time - Hour
   int obsm = Parsed_metar.substring(9, 11).toInt();            // METAR Obs Time - Minute
-  int ago = ((Hour - obsh) * 60) + Minute - obsm;               // Minutes ago
+  int ago = ((Hour - obsh) * 60) + Minute - obsm;              // Minutes ago
   if (ago < 0)    ago = ((24 - obsh) * 60) + Minute - obsm;
 
   // *** CREATE  Station Metar : Codes updates on every cycle
@@ -657,7 +607,6 @@ void Decodedata(int i, String station, String Parsed_metar) {
     if (search_End < search_From)  search_End = search_Raw_Text;           // No "RMK" Found : Use Default for Remark Start
     if (search_End > search_Raw_Text)  search_End = search_Raw_Text;       // Something is Wrong : Use Default for Remark Start
 
-
     // *** CREATE  Remark : Codes to Text
     // StationMetar[i]    Station Metar Codes including "new" & "ago"
     //StationRemark[i]    Station Remark Codes used in Sumary Display
@@ -667,10 +616,8 @@ void Decodedata(int i, String station, String Parsed_metar) {
     StationRemark[i] = Parsed_metar.substring(search_End, search_Raw_Text);          // Station Remark code NOT including Brackets in Sumary Display
     Remark[i] = "[" + Parsed_metar.substring(search_End, search_Raw_Text) + " ]";    // Adds Brackets and a SPACE for easy viewing
 
-
     // ***  OPTIONAL  ***  To print UPDATED Stations or For Troubleshooting : Print Parsed_metar
     //Serial.printf("No:%d\t%s %s %s\n", i, station.c_str(), Metar_Code.c_str(), Remark[i].c_str());
-
 
     // DECODING Remark  (MAINLY REMOVE UNWANTED CODES)
 
@@ -1109,7 +1056,6 @@ void Decodedata(int i, String station, String Parsed_metar) {
   }                               // UPDATE Station
   Display_LED(i, 20);            // Display This Station LED
 }
-
 
 
 //  *********** Decode Weather in REMARKS and make readable in Dictionary Function
@@ -1709,7 +1655,6 @@ void Go_Server ( void * pvParameters ) {
               client.println(html_code);
               client.println();                  // Send  a blank line
 
-
               // *******   CHECKING BUTTONS & Handling Requests    ******
               // Checking if AIRPORT CODE was Entered
               int search = header.indexOf("GET /get?Airport_Code=");
@@ -1796,7 +1741,6 @@ void Go_Server ( void * pvParameters ) {
 
 
               if (Summary_Flag == 1)  {
-
                 // *********** DISPLAY SUMMARY ***********
                 // Display the HTML web page responsive in any web browser, Page Header, Title, Style & Page Body
                 html_code = "<!DOCTYPE html><html><HEAD><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
@@ -1859,8 +1803,6 @@ void Go_Server ( void * pvParameters ) {
                     }
                     client.print(F("</FONT></TD>"));
 
-
-
                     // Display Visibility in SUMMARY
                     if (Visab[i] > 0)  client.print(color + String(Visab[i]) + "</FONT></TD>");  else  client.print(color + "NA</FONT></TD>");
 
@@ -1917,7 +1859,6 @@ void Go_Server ( void * pvParameters ) {
 
 
               if (Station_Flag == 1)  {
-
                 // *********** DISPLAY STATION  ***********
                 html_code = "<!DOCTYPE html><html><HEAD><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">";
                 html_code += "<TITLE>METAR</TITLE>";
@@ -2118,6 +2059,8 @@ void Go_Server ( void * pvParameters ) {
                   client.print(html_code);
                 }
               }
+
+
               client.println();    // The HTTP response ends with another blank line
               break;               // Break out of the while loop
             } else {               // if you got a newline, then clear currentLine
@@ -2133,7 +2076,6 @@ void Go_Server ( void * pvParameters ) {
     client.stop();                 // Close the Connection
   }
 }
-
 
 
 // ***********   Update Minutes Ago
