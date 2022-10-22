@@ -109,8 +109,8 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //  ################   ENTER YOUR SETTINGS HERE  ################
 // Configure Network Settings:
-//const char*      ssid = "your network name";          // your network SSID (name)
-//const char*  password = "your network password";      // your network password
+const char*      ssid = "your network name";          // your network SSID (name)
+const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
