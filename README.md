@@ -36,9 +36,9 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 ![IMG_2916](https://user-images.githubusercontent.com/24758833/157294109-c94372d3-fa67-4a66-8e46-7be0fdde13f8.JPG)
 
 
-+
-
 + HTML DISPLAYS : Can be accesed by any device connected to a WiFi local network.
+
++ Just Enter the Logical Address http://metar.local or the IP Address in your Browser.
 + METAR Summary Display Example:
 
 
