@@ -1,5 +1,5 @@
 /*
-  10/16/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+  11/02/22  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -71,18 +71,15 @@
   MADE THINGS A LITTLE BETTER, BUG FIXES, IMPROVEMENTS, REPAIRS TO TIME-SPACE CONTINUUM, ETC, ETC.
   Includes: Decoded Metar, Current UTC Time, Temperature in Deg F, Elevation Ft, Estimated Density Altitude Ft.
   ANY Airport code may be used in the Worldwide FAA Data Base(see above link), but optimized for US airports.
+  Questions or Comments to Jpipe001@Gmail.com.
 
   //  RECENT CHANGES:
-  Added Heat Index, Windchill, Relative Humidity to Station Display 07/23/22
-  Cleaned up Remarks 08/01/22
-  Added to Alitmeter 08/04/22
-  Optional to Reduce LED Power usage while getting Data 08/09/22
+  Started this project 10/31/19
   Improved Error Handling in GetData, Now if Comms Error; Stations/LEDS Don't Update 08/18/22
   Added Ago Update in Displays 08/24/22
   Added "LIGHTS OUT" at Night 08/26/22
-  Made things a Little Better 08/26/22
-  Added "LIGHTS OUT" at Night 10/11/22
-  Improvements to the Time-Space Continuum 10/16/22
+  Improved Ceiling 11/02/22  
+  Minor Improvements to make things Better.
 */
 
 #include <Arduino.h>
@@ -125,13 +122,12 @@ struct tm timeinfo;                           // Time String "%A, %B %d %Y %H:%M
 // Set Up LEDS
 #define No_Stations          60      // Number of Stations / Number of LEDs
 #define NUM_LEDS    No_Stations      // Number of LEDs
-#define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With 220 to 330 Ohm Resistor in Line ***
+#define DATA_PIN              5      // Connect LED Data Line to pin D5/P5/GPIO5  *** With 220 to 330 Ohm Resistor in Line [Max 9.0K]***
 #define LED_TYPE         WS2812      // WS2811 or WS2812 or NEOPIXEL
 #define COLOR_ORDER         GRB      // WS2811 are RGB or WS2812 are GRB or NEOPIXEL are CRGB
-#define BRIGHTNESS           18      // Master LED Brightness (<12=Dim 20=ok >20=Too Bright/Much Power)
+#define BRIGHTNESS           16      // Master LED Brightness (<12=Dim 16~20=ok >20=Too Bright/Much Power) Set as required
 #define FRAMES_PER_SECOND   120
 CRGB leds[NUM_LEDS];                 // Color Order for LEDs ~ CRGB for Displaying Gradients
-
 
 
 // Define STATIONS Variables      ~~~~~      Some Examples
@@ -145,8 +141,8 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT delete this li
   "KLGC, LA GRANGE, GA        ",        // 6  Over type your Station Code and Station Name.
   "KCSG, COLUMBUS, GA         ",        // 7  and include the "quotes" and the "first and last comma" (SYNTAX is IMPORTANT).
   "KMCN, MACON, GA            ",        // 8  Padding after Station Name is not necessary.
-  "KCKF, CORDELLE, GA         ",        // 9  You can customise the Station Name.
-  "KABY, ALBANY, GA           ",        // 10
+  "KCKF, CORDELLE, GA         ",        // 9
+  "KABY, ALBANY, GA           ",        // 10 Add or Delete Stations as necessary.
   "KTLH, TALLAHASSEE, FL      ",        // 11
   "KVLD, VALDOSTA, GA         ",        // 12 Note: SKYVECTOR.COM is good for locating METAR Reporting Stations
   "KAYS, WAYCROSS, GA         ",        // 13
@@ -157,7 +153,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT delete this li
   "KAGS, AUGUSTA, GA          ",        // 18
   "KAHN, ATHENS, GA           ",        // 19
   "KCEU, CLEMSON, GA          ",        // 20
-  "KJES, JESUP (my home town), GA",     // 21
+  "KJES, JESUP (my home town), GA",     // 21 You can customise the Station Name.
   "KBHC, BAXLEY, GA           ",        // 22
   "KAZE, HAZLEHURST, GA       ",        // 23
   "KCAE, COLUMBIA, SC         ",        // 24
@@ -228,7 +224,7 @@ byte Hour = 0;                // Latest Hour
 byte Minute = 0;              // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min = 0;         // Last Update Minute
-byte Group_of_Stations = 25;  // Get a Group of <28 Stations at a time
+byte Group_of_Stations = 20;  // Get a Group of <28 Stations at a time
 byte Update_Interval = 6;     // Updates Data every 6 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down = 0;          // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
@@ -334,7 +330,7 @@ void Main_Loop( void * pvParameters ) {
     //  Optional Turn LEDS OFF at NIGHT  5PM to 8AM ~ Local Time
     byte  On_Hr = 12;     // 8AM =  8:00Hr + 4 = 12 Hr UTC  ~ ON
     byte Off_Hr = 21;     // 5PM = 17:00Hr + 4 = 21 Hr UTC  ~ OFF : Suspend Function
-    // Off_Hr = 24;          // ****   To Not Invoke This
+    Off_Hr = 24;          // ****   To Not Invoke This
 
     if (Hour == Off_Hr)  {               // Check for Off Hour
       while (Hour != On_Hr)  {           // Loop until On Hour
@@ -923,19 +919,19 @@ void Decodedata(int i, String station, String Parsed_metar) {
     search0 = StationMetar[i].indexOf("G");
     search1 = StationMetar[i].indexOf("KT");
     if (search0 > 0 && search1 - search0 > 2)
-      Sig_Weather[i] =  Sig_Weather[i] + "Gusts to " + StationMetar[i].substring(search1 - 2, search1) + " KTS ;  ";
+      Sig_Weather[i] =  Sig_Weather[i] + "Gusts to " + StationMetar[i].substring(search1 - 2, search1) + " KTS&nbsp&nbsp&nbsp";
 
     // Variable Wind Dir
     search0 = StationMetar[i].indexOf("0V");
     search1 = StationMetar[i].indexOf("FT");
     if (search0 > 0  && search1 < 0)
-      Sig_Weather[i] = Sig_Weather[i] + " Wind Dir Varies: " + StationMetar[i].substring(search0 - 2, search0 + 5) + ";  ";
+      Sig_Weather[i] = Sig_Weather[i] + "Wind Dir Variable: " + StationMetar[i].substring(search0 - 2, search0 + 5) + "&nbsp&nbsp&nbsp";
 
     // Significant Weather
     search0 = StationMetar[i].indexOf("SM R");
     search1 = StationMetar[i].indexOf("FT");
     if (search0 > 0 && search1 > 0)
-      Sig_Weather[i] = Sig_Weather[i] + " Runway Vis: " + StationMetar[i].substring(search0 + 3, search1 + 2) + ";  ";
+      Sig_Weather[i] = Sig_Weather[i] + "Runway Vis: " + StationMetar[i].substring(search0 + 3, search1 + 2) + "&nbsp&nbsp&nbsp";
 
     // Significant Weather in metar and making readable Weather
     if (StationMetar[i].indexOf("BL") > 0)    Sig_Weather[i] = Sig_Weather[i] + " Blowing";
@@ -1347,6 +1343,7 @@ String Decode_Weather(String weather) {
   weather.replace("E", " ended");                      // Rename Later
 
   weather.replace("Clouds1", "Clouds=1 Oktas ");
+  weather.replace("Clouds2", "Clouds=2 Oktas ");
   weather.replace("Clouds3", "Clouds=3 Oktas ");
   weather.replace("Clouds4", "Clouds=4 Oktas ");
   weather.replace("Clouds5", "Clouds=5 Oktas ");
@@ -1426,6 +1423,30 @@ String Decode_Weather(String weather) {
     weather.replace(weather.substring(search0, search1 + 5), Dir + Wind + At);
   }
 
+  // Ceiling / Variable
+  search0 = weather.indexOf("Ceiling");
+  if (search0 >= 0) {
+    char Ceiling[6];
+    strcpy(Ceiling, weather.substring(search0 + 8, search0 + 11).c_str());
+    int ceiling = 0;
+    for (int i = 0; i < 3; i++) {
+      ceiling = ceiling * 10 + (Ceiling[i] - '0');
+    }
+    weather.replace(weather.substring(search0 + 8, search0 + 11), String(ceiling * 100) + " Ft");
+
+    search0 = weather.indexOf("Variable", search0);
+    if (search0 >= 0) {
+      char Variable[6];
+      strcpy(Variable, weather.substring(search0 + 8, search0 + 11).c_str());
+      int variable = 0;
+      for (int i = 0; i < 3; i++) {
+        variable = variable * 10 + (Variable[i] - '0');
+      }
+      weather.replace(weather.substring(search0, search0 + 11), + " Variable " + String(variable * 100) + " Ft");
+    }
+  }
+
+
   // For Troubleshooting:
   //Serial.printf("\tRemarks\t\t.%s.\n", weather.c_str());
 
@@ -1502,6 +1523,7 @@ void Display_Weather_LEDS (int wait) {
 
 // ***********  Twinkle for Flashing Weather
 void Twinkle (int index, byte red, byte green, byte blue, byte pulses, int on_time, int off_time) {
+  if (index > 52)  index = 52;
   leds[index - 1].r = 0x00;    //  Red   Off
   leds[index - 1].g = 0x00;    //  Green Off
   leds[index - 1].b = 0x00;    //  Blue  Off
