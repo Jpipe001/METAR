@@ -2,6 +2,12 @@
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
 + Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
 
++ Most Metar Charts use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.
+
+It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
+Please see examples below.  
+With decoded METAR information and much more.
+
 This programme uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
 
 + A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Catorgry with Colors, GREEN, BLUE, RED and MAGENTA plus more.
