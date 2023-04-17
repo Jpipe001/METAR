@@ -1,6 +1,7 @@
 /*********
   Borrowed code from Andreas Spiess
   Complete project details at https://github.com/SensorsIot/ESP32-OTA
+  Add this file to the SAME folder as METAR
 *********/
 
 #ifdef ESP32
