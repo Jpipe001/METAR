@@ -128,8 +128,8 @@
   Added Ago Update in Displays 08/24/22
   Added "LIGHTS OUT" at Night 08/26/22
   Improved Ceiling 11/02/22
-  Allow Over The Air Software Updates  04/06/23
-  Added AirNav link in Station Display  04/08/23
+  Allow Over The Air Software Updates 04/06/23
+  Added AirNav link in Station Display 04/08/23
   Minor Improvements to make things Better 04/19/23.
 */
 
