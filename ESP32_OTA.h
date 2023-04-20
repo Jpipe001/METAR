@@ -40,7 +40,7 @@ void SetupOTA(const char* nameprefix, const char* ssid, const char* password) {
 
   // Wait for connection
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection FAILED !  ~  Check Network Settings !!");
+    Serial.println("Connection FAILED !  ~  Check Network Settings !");
     break;
   }
 
