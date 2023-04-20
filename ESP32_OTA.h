@@ -1,7 +1,7 @@
 /*********
   Borrowed code from Andreas Spiess
   Complete project details at https://github.com/SensorsIot/ESP32-OTA
-  Add this file to the SAME folder as METAR
+  Put This File in the SAME Folder as METAR
 *********/
 
 #ifdef ESP32
@@ -33,16 +33,15 @@ void SetupOTA(const char* nameprefix, const char* ssid, const char* password) {
   snprintf(fullhostname, maxlen, "%s-%02x%02x%02x", nameprefix, mac[3], mac[4], mac[5]);
   ArduinoOTA.setHostname(fullhostname);
   delete[] fullhostname;
-  
+
   // Configure and start the WiFi station
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   // Wait for connection
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
+    Serial.println("Connection FAILED !  ~  Check Network Settings !!");
+    break;
   }
 
   // Port defaults to 3232
@@ -79,7 +78,7 @@ ArduinoOTA.onStart([]() {
   });
   
     ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("Error[%u]: ", error);
+      Serial.printf("\nError[%u]: ", error);
       if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
       else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
@@ -89,7 +88,7 @@ ArduinoOTA.onStart([]() {
 
   ArduinoOTA.begin();
 
-  Serial.println("\nOTA Initialized");
+  Serial.println("OTA Initialized");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
   Serial.print("MAC address: ");

@@ -1,5 +1,5 @@
 
-/* 04/14/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
+/* 04/19/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -130,12 +130,12 @@
   Improved Ceiling 11/02/22
   Allow Over The Air Software Updates  04/06/23
   Added AirNav link in Station Display  04/08/23
-  Minor Improvements to make things Better 04/14/23.
+  Minor Improvements to make things Better 04/19/23.
 */
 
 // Include the folling Libaries:
 #include <Arduino.h>
-#include "ESP32_OTA.h"    // Allow Over The Air Software Updates  by Arduino ~ Arduino_ESP32_OTA
+#include "ESP32_OTA.h"    // Over The Air Software Updates ~ Put This File in the SAME Folder as METAR
 
 #include <FastLED.h>      // FastLED  by Daniel Garcia
 #include <WiFiMulti.h>    // WifiMulti_Generic  by Khoi Hoang
@@ -163,7 +163,6 @@ const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
-
 
 
 // Set Up Time Server
@@ -256,21 +255,21 @@ PROGMEM String  StationMetar[No_Stations + 1];   // Station Metar code including
 PROGMEM String StationRemark[No_Stations + 1];   // Station Remark code including "brackets"
 PROGMEM String        Remark[No_Stations + 1];   // Final Remark for Station (text)
 PROGMEM String   Sig_Weather[No_Stations + 1];   // Significant Weather
-PROGMEM float          TempC[No_Stations + 1];   // Temperature deg C
-PROGMEM float         DewptC[No_Stations + 1];   // Dew point deg C
 PROGMEM String          Wind[No_Stations + 1];   // Wind speed
 PROGMEM String          wDir[No_Stations + 1];   // Wind direction
-PROGMEM int         old_wDir[No_Stations + 1];   // Previous Wind direction
-PROGMEM float          Visab[No_Stations + 1];   // Visibility
 PROGMEM String           Sky[No_Stations + 1];   // Sky_cover
-PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
-PROGMEM int   old_cloud_base[No_Stations + 1];   // Previous Cloud Base
+PROGMEM String      Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
+PROGMEM float          Visab[No_Stations + 1];   // Visibility
+PROGMEM float          TempC[No_Stations + 1];   // Temperature deg C
+PROGMEM float         DewptC[No_Stations + 1];   // Dew point deg C
 PROGMEM float       SeaLpres[No_Stations + 1];   // Sea Level Pressure
 PROGMEM float          Altim[No_Stations + 1];   // Altimeter setting
 PROGMEM float      old_Altim[No_Stations + 1];   // Previous altimeter setting
 PROGMEM float      Elevation[No_Stations + 1];   // Elevation setting
-PROGMEM String      Category[No_Stations + 1];   // NULL   VFR    MVFR   IFR    LIFR
-//................................................ Black  Green   Blue   Red   Magenta
+PROGMEM int         old_wDir[No_Stations + 1];   // Previous Wind direction
+PROGMEM int   new_cloud_base[No_Stations + 1];   // New Cloud Base
+PROGMEM int   old_cloud_base[No_Stations + 1];   // Previous Cloud Base
+
 
 #define LED_BUILTIN 2         // ON Board LED GPIO 2
 PROGMEM String MetarData;     // Raw METAR data
@@ -298,16 +297,12 @@ void setup() {
   Serial.begin(115200);
   delay(4000);         // Time to press "Clear output" in Serial Monitor
 
-  SetupOTA(ServerName, ssid, password);   // ESP32_OTA.h Set Up
-
   Serial.printf("\nMETAR Reporting with LEDs and Local WEB SERVER\n");
   ShortFileName = String(__FILE__).substring(String(__FILE__).lastIndexOf("\\") + 1);       // Shortened File Name
   if (ShortFileName == __FILE__) ShortFileName = String(__FILE__).substring(String(__FILE__).lastIndexOf("/") + 1);  // Shortened File Name in case Raspberry pi
-  Serial.printf("Program       ~ %s\n", __FILE__);
-  Serial.printf("Program       ~ %s\n", ShortFileName.c_str());
-  Serial.printf("Date Compiled ~ %s\n\n", __DATE__);
-
-  Init_LEDS();         // Initialize LEDs
+  Serial.printf("Long File Name   ~ %s\n", __FILE__);
+  Serial.printf("Short File Name  ~ %s\n", ShortFileName.c_str());
+  Serial.printf("Date Compiled    ~ %s\n\n", __DATE__);
 
   // Initialize the WiFi network settings.
   WiFi.begin(ssid, password);
@@ -321,25 +316,30 @@ void setup() {
     delay(300);    // Wait a little bit
     Serial.printf(".");
     count++;
-    if (count > 100) break;    // Loop for 100 tries
+    if (count > 80) break;    // Loop for 80 tries
   }
-  if (count > 100)   Serial.printf("\n ~ Can't Connect to Network\n\n"); else  Serial.printf(" ~ Connected Successfully\n");
+  if (count > 80)   Serial.printf("\n ~ Can't Connect to Network\n\n"); else  Serial.printf(" ~ Connected Successfully\n");
+
+  SetupOTA(ServerName, ssid, password);   // ESP32_OTA.h Set Up
+
+  if (!MDNS.begin(ServerName) || count > 80) {     // Start mDNS with ServerName
+    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings !!\nError setting up MDNS responder !\n");
+    while (1) {
+      delay(1000);                   // Stay here
+    }
+  }
 
   // Print the Signal Strength:
   long rssi = WiFi.RSSI() + 100;
   Serial.printf("Signal Strength = %ld", rssi);
   if (rssi > 50)  Serial.printf(" (>50 - Good)\n");  else   Serial.printf(" (Could be Better)\n");
+
+  Init_LEDS();         // Initialize LEDs
+
   Serial.printf("*******************************************\n");
 
   WiFi.mode(WIFI_STA);
   wifiMulti.addAP(ssid, password);
-
-  if (!MDNS.begin(ServerName) || count > 100) {     // Start mDNS with ServerName
-    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings!!\nError setting up MDNS responder!\n");
-    while (1) {
-      delay(1000);                   // Stay here
-    }
-  }
 
   Serial.printf("To View Decoded Station METARs from a Computer or \nCell Phone connected to the %s WiFi Network.\n", ssid);
 
@@ -1228,7 +1228,7 @@ String Decode_Weather(String weather) {
   weather.replace("FEW", "Few CLD");
   weather.replace("MDT CU", " ModerateCU");
   weather.replace("MDT", "Moderate");
-  weather.replace("CLD", "Clouds ");
+  weather.replace("CLD", "Clouds at ");
   weather.replace("EMBD", "mbedded");                 // Rename Later
   weather.replace("EMBED", "mbedded");                // Rename Later
   weather.replace("BINOVC", " KN in OC");             // Rename Later
@@ -1290,6 +1290,9 @@ String Decode_Weather(String weather) {
   weather.replace("E-", "east-");                       // Rename Later
   weather.replace("-E", "-east");                       // Rename Later
   weather.replace("-SE", "-Seast");                     // Rename Later
+  weather.replace(" S ", " South ");
+  weather.replace(" N ", " North ");
+  weather.replace(" W ", " West ");
 
   weather.replace("SFC VIS", " SurfaceVIS");
   weather.replace("SFC", "Surface");
@@ -1721,7 +1724,7 @@ void Decode_Name(int i) {
   }
   if (search1 > 0 && search2 > 0)  Station_name = Station_name + MetarData.substring(search1 + 9, search2);
   Stations[i] = Station_name;
-  if (Stations[i].length() < 5 )  {    // ERROR in STATION NAME
+  if (Stations[i].length() < 6 )  {    // ERROR in STATION NAME
     Stations[i] = "NULL,";             // Reset Station Name
     StationMetar[i] = Station_name + " : ERROR in STATION NAME or Not Reporting";
   }
@@ -1773,11 +1776,11 @@ void Go_Server ( void * pvParameters ) {
               client.println();                  // Send  a blank line
 
               // *******   CHECKING BUTTONS & Handling Requests    ******
-              // Checking if AIRPORT CODE was Entered
+              // Checking from Station METAR (Any Airport ID Button) or METAR Summary
               int search = header.indexOf("GET /get?Airport_Code=");
               int search1 = header.indexOf(" HTTP", search);
 
-              if (search >= 0) {                // From Station METAR  (ANY AIRPORT CODE Button) or METAR Summary
+              if (search >= 0) {
                 String Airport_Code = header.substring(search + 22, search1);
                 Airport_Code.toUpperCase();     // Changes all letters to UPPER CASE
                 sta_n = -1;
@@ -2101,22 +2104,21 @@ void Go_Server ( void * pvParameters ) {
                   html_code += "</TD></TR>";
 
                   //  Temperature and Heat Index or Wind Chill in STATION
-                  float TempF = TempC[sta_n] * 1.8 + 32;  // Deg F
                   html_code += "<TR><TD>Temperature</TD><TD>";
                   if (TempC[sta_n] <= 0)  html_code += "<FONT COLOR='Blue'>";  else   html_code += "<FONT COLOR='Black'>";
                   if (TempC[sta_n] == 0 && DewptC[sta_n] == 0)   html_code += "NA</FONT>";
                   else  {
                     // Display_Text (Temperature) in STATION
-                    String Display_Text = Format_Temp_Text(TempC[sta_n], TempF);
+                    String Display_Text = Format_Temp_Text(TempC[sta_n], TempC[sta_n] * 1.8 + 32);
                     html_code += Display_Text + "</FONT>";
                     if (TempC[sta_n] >= 35.0)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd HOT</I></FONT>";
 
-                    // Heat Index  in STATION
+                    // Heat Index in STATION
                     // Don't display Heat Index unless Temperature > 18 Deg C  and  Heat Index > Temperature
                     float Heat_Index = Calc_Heat_Index(sta_n);             // *** Calculate Heat_Index
                     if (TempC[sta_n] >= 18  &&  Heat_Index >= TempC[sta_n]) {
 
-                      // Display_Text (Heat Index)  in STATION
+                      // Display_Text (Heat Index) in STATION
                       String Display_Text = Format_Temp_Text(Heat_Index, Heat_Index * 1.8 + 32);
                       html_code += "<BR><FONT COLOR='Purple'>" + Display_Text + "&nbsp&nbsp&nbspHeat Index</FONT>";
                     }
