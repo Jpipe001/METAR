@@ -55,6 +55,17 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 
 ![image](https://user-images.githubusercontent.com/24758833/183297159-c19801f8-f4aa-4bc4-815a-bca285adbfa8.png)
 
++ Added OVER THE AIR updates:
+
+To use this you need to add the library "Over_The_Air.h" in this respository to the SAME folder as the METAR program.
+
+Edit the METAR program with your credentials.
+
+First: "Upload" as normal, using a cable, to initialise OTA.
+
+Then use the menu  "Tools", "Port" and select  metar xx.x.x.xx and "Upload" again, then it should work "Over the Air".  (Direct connection with the computer is not required.)
+
+There are some videos on how to use "OTA" on YouTube.
 
 + See Additional Remarks/Comments in the program file.
 + Not for Commercial Use.
