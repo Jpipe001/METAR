@@ -40,7 +40,7 @@ void SetupOTA(const char* nameprefix, const char* ssid, const char* password) {
 
   // Wait for connection
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection FAILED !  ~  Check Network Settings !!");
+    Serial.printf("Connection FAILED !  ~  Check Network Settings !!\n");
     break;
   }
 
@@ -57,8 +57,8 @@ void SetupOTA(const char* nameprefix, const char* ssid, const char* password) {
   // MD5(admin) = 21232f297a57a5a743894a0e4a801fc3
   // ArduinoOTA.setPasswordHash("21232f297a57a5a743894a0e4a801fc3");
 
-ArduinoOTA.onStart([]() {
-  //NOTE: make .detach() here for all functions called by Ticker.h library - not to interrupt transfer process in any way.
+  ArduinoOTA.onStart([]() {
+    //NOTE: make .detach() here for all functions called by Ticker.h library - not to interrupt transfer process in any way.
     String type;
     if (ArduinoOTA.getCommand() == U_FLASH)
       type = "sketch";
@@ -66,37 +66,34 @@ ArduinoOTA.onStart([]() {
       type = "filesystem";
 
     // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-    Serial.println("Start updating " + type);
+    Serial.printf("Start updating %s\n", type.c_str());
   });
-  
+
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nEnd");
+    Serial.printf("\nEnd\n");
   });
-  
+
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
     Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
   });
-  
-    ArduinoOTA.onError([](ota_error_t error) {
-      Serial.printf("\nError[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-      else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("\nError[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.printf("Auth Failed\n");
+    else if (error == OTA_BEGIN_ERROR) Serial.printf("Begin Failed\n");
+    else if (error == OTA_CONNECT_ERROR) Serial.printf("Connect Failed\n");
+    else if (error == OTA_RECEIVE_ERROR) Serial.printf("Receive Failed\n");
+    else if (error == OTA_END_ERROR) Serial.printf("End Failed\n");
+  });
 
   ArduinoOTA.begin();
 
-  Serial.println("OTA Initialized");
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
-  Serial.print("MAC address: ");
-  Serial.println(WiFi.macAddress());
-  Serial.println("OTA Done !!");
+  Serial.printf("\nOTA ~ Initialized\n");
+  Serial.printf("IP address:  %s\n", WiFi.localIP().toString());
+  Serial.printf("MAC address: %s\n", String(WiFi.macAddress()).c_str());
+  Serial.printf("OTA ~ Done\n\n");
 
-
-  #if defined(ESP32_RTOS) && defined(ESP32)
+#if defined(ESP32_RTOS) && defined(ESP32)
   xTaskCreate(
     ota_handle,          /* Task function. */
     "OTA_HANDLE",        /* String with name of task. */
@@ -105,5 +102,4 @@ ArduinoOTA.onStart([]() {
     1,                   /* Priority of the task. */
     NULL);               /* Task handle. */
 #endif
-
 }
