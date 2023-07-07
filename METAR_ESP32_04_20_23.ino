@@ -1653,8 +1653,8 @@ void Set_Cat_LED (int i)  {
   if (Category[i] == "MVFR") leds[i - 1] = CRGB::DarkBlue;
   if (Category[i] == "IFR")  leds[i - 1] = CRGB::DarkRed;
   if (Category[i] == "LIFR") leds[i - 1] = CRGB::DarkMagenta;
-  //if (Category[i] == "NF")   leds[i - 1] = CRGB::Black;
-  if (Category[i] == "NF")   leds[i - 1] = CRGB(30, 30, 0); // Very Dim Yellow
+  if (Category[i] == "NF")   leds[i - 1] = CRGB::Black;
+  //if (Category[i] == "NF")   leds[i - 1] = CRGB(30, 30, 0); // Very Dim Yellow
   if (Category[i] == "NA")   leds[i - 1] = CRGB(30, 30, 0); // Very Dim Yellow
 }
 
