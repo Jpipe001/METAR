@@ -1,6 +1,8 @@
 
 /* 04/20/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
 
+  No Over the Air Updates.
+
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
   https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.                         ~  GOOD READ
