@@ -11,7 +11,7 @@ Which shows decoded METAR information and much more. Please see examples below.
 
 This programme uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
 
-+ A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Catorgry with Colors, GREEN, BLUE, RED and MAGENTA plus more.
++ A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
 + HTML Pages, showing a Summary of the METAR codes and the Invividual Station Display of Decoded Data on a Local Network.
 
