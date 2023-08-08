@@ -159,15 +159,11 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 
 //  ################   CONFIGURE YOUR NETWORK SETTINGS HERE  ################
-//const char*      ssid = "your network name";          // your network SSID (name)
-//const char*  password = "your network password";      // your network password
+const char*      ssid = "your network name";          // your network SSID (name)
+const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
-
-const char*        ssid = "NETGEAR46";       // your Network SSID (Name) ~ Network Example
-const char*    password = "icysea351";       // your Network Password
-
 
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
