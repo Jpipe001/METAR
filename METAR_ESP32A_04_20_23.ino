@@ -1,7 +1,5 @@
 
-/* 04/20/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Latest Update
-
-  With Over the Air Updates
+/* 08/08/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Updates
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -12,7 +10,7 @@
   https://youtu.be/xPlN_Tk3VLQ    Getting Started with ESP32 video from DroneBot Workshop.
 
   https://www.aviationweather.gov/docs/metar/Stations.txt    List of ALL Stations Codes(Worldwide FAA Data Base).
-  https://aeronav.faa.gov/visual/                            FAA Wall Chart downloads and then edit to suit.
+  https://aeronav.faa.gov/visual/            FAA Wall Chart downloads and then edit to suit.
 
   ###################################################################################################
 
@@ -132,11 +130,12 @@
   Improved Ceiling 11/02/22
   Allow Over The Air Software Updates  04/06/23
   Added AirNav link in Station Display  04/08/23
-  Minor Improvements to make things Better 04/20/23.
+  Minor Improvements to make things Better 08/08/23.
 */
 
 // Include the folling Libaries:
 #include <Arduino.h>
+
 #include "Over_The_Air.h"  // Over The Air Software Updates ~ Put This File in the SAME Folder as METAR
 
 #include <FastLED.h>      // FastLED  by Daniel Garcia
@@ -165,6 +164,9 @@ String    urls = "/adds/dataserver_current/httpparam?dataSource=Stations&request
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
+
+const char*        ssid = "NETGEAR46";       // your Network SSID (Name) ~ Network Example
+const char*    password = "icysea351";       // your Network Password
 
 
 // Set Up Time Server
@@ -217,7 +219,7 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT delete this li
   "KAFP, ANSON CO, NC         ",        // 26
   "KBDU, BOULDER, CO          ",        // 27
   "KCVG, CINCINNATI, OH       ",        // 28
-  "KBWI, WASHINGTON, DC       ",        // 29
+  "KDCA, WASHINGTON National, DC",      // 29
   "KORD, CHICAGO O'HARE, IL   ",        // 30
   "KMEM, MEMPHIS, TN          ",        // 31
   "KMSY, NEW ORLEANS, LA      ",        // 32
@@ -235,11 +237,11 @@ std::vector<String> PROGMEM Stations {  //   << Set Up   - Do NOT delete this li
   "EGYP, MOUNT PLEASANT, Falkland Islands", // 44
   "EHAM, AMSTERDAM SCHIPHOL   ",        // 45
   "LFSB, BASEL, SWITZERLAND   ",        // 46
-  "KORL, ORLANDO, FL          ",        // 47
+  "KORL, ORLANDO EXEC, FL     ",        // 47
   "KPBI, WEST PALM BEACH, FL  ",        // 48
   "KFXE, FT LAUDERDALE EXE, FL",        // 49
   "KFLL, FT LAUDERDALE INT, FL",        // 50
-  "KHWO, NTH PERRY, FL        ",        // 51
+  "KHWO, NORTH PERRY, FL      ",        // 51
   "KMIA, MIAMI, FL            ",        // 52
   "KEYW, KEY WEST, FL         ",        // 53
   "KHXD, HILTON HEAD, SC      ",        // 54
@@ -280,7 +282,7 @@ byte Hour = 0;                // Latest Hour
 byte Minute = 0;              // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min = 0;         // Last Update Minute
-byte Group_of_Stations = 21;  // Get a Group of <28 Stations at a time
+byte Group_of_Stations = 20;  // Download a Group of <28 Stations at a time
 byte Update_Interval = 6;     // Updates Data every 6 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down = 0;          // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
@@ -326,7 +328,7 @@ void setup() {
   SetupOTA(ServerName, ssid, password);       // In Over_The_Air.h
 
   if (!MDNS.begin(ServerName) || count > 80) {     // Start mDNS with ServerName
-    Serial.printf("\nSOMETHING WENT WRONG\nProgram Halted  ~  Check Network Settings !!\nError setting up MDNS responder !\n");
+    Serial.printf("\nSOMETHING WENT WRONG\nError setting up MDNS responder !\nProgram Halted  ~  Check Network Settings !!\n");
     while (1) {
       delay(1000);                   // Stay here
     }
@@ -506,9 +508,9 @@ void GetData(String url, int i) {
   MetarData = "";                     // Reset Raw Data for Group of Stations
   if (url == "NAME") url = host + urls + Stations[i];  else   url = host + urlb + url;
   url = url.substring(0, url.length() - 1);    // Remove last "comma"
-
+  
   if (wifiMulti.run() == WL_CONNECTED)  {
-    //digitalWrite(LED_BUILTIN, HIGH);   // ON ~~ Only For Troubleshooting
+    //digitalWrite(LED_BUILTIN, HIGH);     // ON ~~ Only For Troubleshooting Saving Power
     HTTPClient https;
     https.begin(url);                    // Start connection and send HTTP header
     httpCode = https.GET();              // httpCode will be negative on error so test or 200 for HTTP_CODE_OK
@@ -516,30 +518,31 @@ void GetData(String url, int i) {
       // HTTP header has been send and Server response header has been handled
       // and File FOUND at server. Get back : httpCode = 200 (HTTP_CODE_OK)
       MetarData = https.getString();     // SAVE DATA in MetarData
-      https.end();                       // CLOSE Communications
-      digitalWrite(LED_BUILTIN, LOW);    // OFF
+      //digitalWrite(LED_BUILTIN, LOW);    // OFF
 
       // For Troubleshooting : Print url, MetarData Size, Check Max Allocated Heap & Print MetarData
+      //Serial.printf("%s\tNo:%d\tIn GetData : url=%s\n", Clock, i, url.c_str());
       //Serial.printf("%s\tNo:%d\tIn GetData : url=%s\n", Clock, i, url.substring(url.indexOf("stationString="), url.length()).c_str());
       //Serial.printf("%s\tNo:%d\tIn GetData : MetarData=%d  MaxAllocHeap=%d  Free=%d  httpCode=%d ~ %s\n", Clock, i, MetarData.length(), ESP.getMaxAllocHeap(), ESP.getMaxAllocHeap() - MetarData.length(), httpCode, https.errorToString(httpCode).c_str());
-      //Serial.printf("%s\tNo:%d\tIn GetData : MetarData:\n%s\n", Clock, i, MetarData.c_str());
+      //Serial.printf("%s\tNo:%d\tIn GetData : MetarData: Length=%d\n%s\n", Clock, i, MetarData.length() ,MetarData.c_str());
 
       if (ESP.getMaxAllocHeap() - MetarData.length() < 10500)   { // NO UPDATE : RUNNING LOW OF MEMORY
-        httpCode = -100;                                          // NO UPDATE for this Group of Stations, in ParseMetar
         Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : Running Low on Memory\n", Clock, i);
+        httpCode = -100;                                          // NO UPDATE for this Group of Stations, in ParseMetar
+        Network_Status ();               // WiFi Network Error
       }
       if (MetarData.length() < 500)   {                           // NO UPDATE : NO MetarData DOWNLOADED
+        Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : No MetarData Downloaded : %i bytes  httpCode = %i\n", Clock, i, MetarData.length(), httpCode);
         httpCode = -200;                                          // NO UPDATE for this Group of Stations, in ParseMetar
-        Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : No MetarData Downloaded\n", Clock, i);
         Network_Status ();               // WiFi Network Error
       }
 
     }  else  {                           // CONNECTION ERROR : NO UPDATE for this Group of Stations, in ParseMetar
-      https.end();                       // CLOSE Communications
       digitalWrite(LED_BUILTIN, LOW);    // OFF
       Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : Connection Error=%d ~ %s\n", Clock, i, httpCode, https.errorToString(httpCode).c_str());
       Network_Status ();                 // WiFi Network Error
     }
+    https.end();                         // CLOSE Communications
   }
 }
 
@@ -946,8 +949,8 @@ void Decodedata(int i, String station, String Parsed_metar) {
       int press_change = 0;
       press_change = text.substring(1, 2).toInt();
       if (search2 > 4)   mesg = "<br>";  else    mesg = "";
-      if (press_change > 4)  mesg = mesg + "3 Hour Pressure DEC " + Remark[i].substring(search2 + 4, search2 + 5) + "." + Remark[i].substring(search2 + 5, search2 + 6) + " mb";
-      if (press_change < 4)  mesg = mesg + "3 Hour Pressure INC " + Remark[i].substring(search2 + 4, search2 + 5) + "." + Remark[i].substring(search2 + 5, search2 + 6) + " mb";
+      if (press_change > 4)  mesg = mesg + "3 Hour PressureDEC " + Remark[i].substring(search2 + 4, search2 + 5) + "." + Remark[i].substring(search2 + 5, search2 + 6) + " mb";
+      if (press_change < 4)  mesg = mesg + "3 Hour PressureINC " + Remark[i].substring(search2 + 4, search2 + 5) + "." + Remark[i].substring(search2 + 5, search2 + 6) + " mb";
       if (press_change == 4) mesg = mesg + "3 Hour Pressure Steady";
       mesg.replace("0.0 mb", "Negligable");
       Remark[i].replace(Remark[i].substring(search2, search3), mesg);
@@ -1126,10 +1129,10 @@ String Decode_Weather(String weather) {
   // Glossary of CODES
   weather.replace("BECMG", "CMG");                       // Rename Later
   weather.replace("CAVOK", "cavok");                     // Rename Later
-  weather.replace("RERA", "Recent: Rain");
-  weather.replace("REDZ", "Recent: Drizzle");
+  weather.replace("RERA", "Recent : Rain");
+  weather.replace("REDZ", "Recent : Drizzle");
   weather.replace("RTS", "Routes");
-  weather.replace("TEMPO", " Temporary:");
+  weather.replace("TEMPO", " Temporary :");
   weather.replace("AWOS", "awos");                       // Rename Later
   weather.replace("QFE", "qfe");                         // Rename Later
   weather.replace("SKC ", "sky");                        // Rename Later
@@ -1305,8 +1308,8 @@ String Decode_Weather(String weather) {
   weather.replace("VISBL", "visabile");                 // Rename Later
   weather.replace("VIS M", "visability Measured");      // Rename Later
   weather.replace("VIS", " visability");                // Rename Later
-  weather.replace("INC", "Increasing");
-  weather.replace("DEC", "Decreasing");
+  weather.replace("INC", " Increasing");
+  weather.replace("DEC", " Decreasing");
 
   weather.replace(" +", " Heavy ");
   weather.replace(" -", " Light ");
@@ -1322,6 +1325,7 @@ String Decode_Weather(String weather) {
   weather.replace("VCTS", "TS VC");
   weather.replace("OVC", "OC");                        // Rename Later
   weather.replace("VC", "In the vicinity");            // Rename Later
+  weather.replace("TS", "Thunderstorm");
 
   weather.replace("HIER", "Higher");
   weather.replace("LWR", "Lower");
@@ -1374,6 +1378,7 @@ String Decode_Weather(String weather) {
   weather.replace("SN", "Snow ");
   weather.replace("SG", " Snow Grains");
 
+
   weather.replace("BR", "Mist");
   weather.replace("IC", " Ice Cristals");
   weather.replace("PL", " Ice Pellets");
@@ -1389,14 +1394,13 @@ String Decode_Weather(String weather) {
   weather.replace("UP", "Unknown Precip");
   weather.replace("SH", "Showers");
   weather.replace("TCU", "TC");                     // Rename Later
-  weather.replace("TS", " Thunderstorm");
 
   weather.replace("RainG", "Ragged ");
   weather.replace("TR", "Trace ");
-  weather.replace("RE", "<br>Recent:");
+  weather.replace("RE", "<br>Recent : ");
 
   weather.replace("RF", "Rainfall ");
-  weather.replace("RMK ", " Remark:");
+  weather.replace("RMK ", "<br>Remark : ");         // Rename Later
 
   weather.replace("CB", " Cumulonimbus Clouds");
   weather.replace("CC", " Cirrocumulus Clouds");
@@ -1442,7 +1446,7 @@ String Decode_Weather(String weather) {
   weather.replace("OC", "Overcast");                   // Rename
   weather.replace("Conv", "Convective");               // Rename
   weather.replace("TC", " Towering Cumulus Clouds");   // Rename
-  weather.replace("CMG", " Becoming:");                // Rename
+  weather.replace("CMG", " Becoming :");               // Rename
   weather.replace("oerhead", "Overhead");              // Rename
 
   weather.replace("northeast", "NE");                  // Rename
@@ -1517,20 +1521,22 @@ String Decode_Weather(String weather) {
     }
   }
 
-
   // Temporary: [ Ceiling ]
-  search0 = weather.indexOf("Temporary:");
+  search0 = weather.indexOf("Temporary");
   if (search0 >= 0) {
     char Ceiling[5];
     int search1 = weather.indexOf("9999", search0);
     if (search1 >= 0)  {
+
       strcpy(Ceiling, weather.substring(search1, search1 + 4).c_str());
+      Serial.printf("Found 9999 : Ceiling %s = \n", Ceiling);
+
       weather.replace(weather.substring(search1, search1 + 4), " Ceiling ~ Unlimited ");   // Replace code
     } else {
       int search2 = weather.indexOf("000", search0);
       if (search2 >= 0)  {
         strcpy(Ceiling, weather.substring(search2 - 1, search2 + 3).c_str());
-        String text = " Ceiling ~ " + String(Ceiling) + " m ";
+        String text = " Ceiling ~ " + String(Ceiling) + " Ft ";
         weather.replace(weather.substring(search2 - 2, search2 + 3), String(text));    // Replace code
       }
     }
@@ -1552,6 +1558,7 @@ String Decode_Weather(String weather) {
   weather.replace("Temporary", "TEMPORARY");             // Clean Up
   weather.replace("Becoming", "BECOMING");               // Clean Up
   weather.replace("Recent", "RECENT");                   // Clean Up
+  weather.replace("Remark", "REMARK");                   // Clean Up
 
   // For Troubleshooting:
   //Serial.printf("\tFinal Remark\t.%s.\n\n", weather.c_str());
@@ -1729,7 +1736,7 @@ void Decode_Name(int i) {
   Stations[i] = Station_name;
   if (Stations[i].length() < 6 )  {    // ERROR in STATION NAME
     Stations[i] = "NULL,";             // Reset Station Name
-    StationMetar[i] = Station_name + " : ERROR in STATION NAME or Not Reporting";
+    StationMetar[i] = "<B>" + Station_name + "</B> : ERROR in STATION NAME or Not Reporting";
   }
 }
 
@@ -1881,7 +1888,7 @@ void Go_Server ( void * pvParameters ) {
                 String Alt = "ALT<BR>in Hg";       // Set Altimeter Units     ******  For mBar : Change this to "ALT<BR>mBar"  ******
 
                 html_code = "<TABLE BORDER='2' CELLPADDING='5'>";
-                html_code += "<TR BGCOLOR='Cyan'><TD>No:</TD><TD>Station Name</TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>From</TD><TD>WIND<BR>Speed</TD><TD>";
+                html_code += "<TR BGCOLOR='Cyan'><TD>No:</TD><TD>Station Name:</TD><TD>CAT</TD><TD>SKY<BR>COVER</TD><TD>VIS<BR>Miles</TD><TD>WIND<BR>From</TD><TD>WIND<BR>Speed</TD><TD>";
                 html_code += Deg + "</TD><TD>" + Alt + "</TD><TD>METAR Codes & Remarks</TD></TR></FONT>";
                 client.print(html_code);
 
@@ -1892,7 +1899,7 @@ void Go_Server ( void * pvParameters ) {
                   if (Category[i] == "IFR" ) color = color + "'Red'>";
                   if (Category[i] == "LIFR") color = color + "'Magenta'>";
                   if (Category[i] == "NA")   color = color + "'Black'>";
-                  if (Category[i] == "NF")   color = color + "'Orange'>";
+                  if (Category[i] == "NF")   color = color + "'Grey'>";
 
                   // Display Station No & ID in SUMMARY
                   if (Stations[i].substring(0, 4) != "NULL")    {  // Skip Line
@@ -2023,7 +2030,7 @@ void Go_Server ( void * pvParameters ) {
                   if (Category[sta_n] == "IFR" ) Bcol = Bcol + "'Red'";
                   if (Category[sta_n] == "LIFR") Bcol = Bcol + "'Magenta'";
                   if (Category[sta_n] == "NA")   Bcol = Bcol + "'Black'";
-                  if (Category[sta_n] == "NF")   Bcol = Bcol + "'Orange'";
+                  if (Category[sta_n] == "NF")   Bcol = Bcol + "'Grey'";
                   String color = "<TD><FONT " + Bcol.substring(6, Bcol.length()) + ">";
                   html_code = "<TABLE " + Bcol + " BORDER='3' CELLPADDING='5'>";
 
@@ -2124,6 +2131,7 @@ void Go_Server ( void * pvParameters ) {
                       // Display_Text (Heat Index) in STATION
                       String Display_Text = Format_Temp_Text(Heat_Index, Heat_Index * 1.8 + 32);
                       html_code += "<BR><FONT COLOR='Purple'>" + Display_Text + "&nbsp&nbsp&nbspHeat Index</FONT>";
+                      if (Heat_Index >= 40.5)   html_code += "<FONT SIZE='-1' FONT COLOR='Red'><I>&nbsp&nbsp&nbspAnd Dangerous</I></FONT>";
                     }
 
                     // Wind Chill in STATION
@@ -2190,9 +2198,9 @@ void Go_Server ( void * pvParameters ) {
 
                   // Display Foooter and Close
                   html_code = "<BR><FONT COLOR='Navy' FONT SIZE='-1'>File Name &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: " + String(ShortFileName);
+                  html_code += "<BR>URL Address &nbsp: " + SW_addr;
                   html_code += "<BR>Connected to &nbsp: " + String(ssid);
                   html_code += "<BR>H/W Address &nbsp: " + HW_addr;
-                  html_code += "<BR>URL Address &nbsp: " + SW_addr;
                   html_code += "<BR><B>Dedicated to : F. Hugh Magee</B>";
                   html_code += "</FONT></BODY></html>";
                   client.print(html_code);
