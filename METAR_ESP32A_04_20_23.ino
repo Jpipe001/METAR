@@ -1,5 +1,5 @@
 
-/* 08/08/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Updates
+/* 09/20/23  Latest Software on Github : https://github.com/Jpipe001/METAR    <<   Check for Updates
 
   METAR Reporting with LEDs and Local WEB SERVER
   In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
@@ -130,7 +130,7 @@
   Improved Ceiling 11/02/22
   Allow Over The Air Software Updates  04/06/23
   Added AirNav link in Station Display  04/08/23
-  Minor Improvements to make things Better 08/08/23.
+  Minor Improvements to make things Better 09/20/23.
 */
 
 // Include the folling Libaries:
@@ -164,6 +164,7 @@ const char*  password = "your network password";      // your network password
 
 //const char*      ssid = "iPhone";          // your network SSID (name) ~ iPhone Example
 //const char*  password = "johnjohn";        // your network password
+
 
 // Set Up Time Server
 const char* ntpServer = "pool.ntp.org";
@@ -278,8 +279,8 @@ byte Hour = 0;                // Latest Hour
 byte Minute = 0;              // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min = 0;         // Last Update Minute
-byte Group_of_Stations = 20;  // Download a Group of <28 Stations at a time
-byte Update_Interval = 6;     // Updates Data every 6 Minutes (Don't overload AVIATIONWEATHER.GOV)
+byte Group_of_Stations = 13;  // Download a Group of <28 Stations at a time, if connection errors - reduce this
+byte Update_Interval = 10;    // Updates Data every 10 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down = 0;          // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
 int httpCode;                 // Error Code
@@ -417,7 +418,7 @@ void Main_Loop( void * pvParameters ) {
     GetAllMetars();                  // Get All Metars and Display Categories
     Comms_Flag = 0;                  // Communication Flag 0=Reset
 
-    Serial.printf("%s\tMetar Data Updated\tNext Update in %d Mins\n", Clock, Count_Down);
+    Serial.printf("%s\tMetar Updated\t\tNext Update in %d Mins\n", Clock, Count_Down);
 
     while (Count_Down > 0)    {
       Display_Metar_LEDS();          // Display Station Metar/Show Loops
@@ -504,7 +505,7 @@ void GetData(String url, int i) {
   MetarData = "";                     // Reset Raw Data for Group of Stations
   if (url == "NAME") url = host + urls + Stations[i];  else   url = host + urlb + url;
   url = url.substring(0, url.length() - 1);    // Remove last "comma"
-  
+
   if (wifiMulti.run() == WL_CONNECTED)  {
     //digitalWrite(LED_BUILTIN, HIGH);     // ON ~~ Only For Troubleshooting Saving Power
     HTTPClient https;
@@ -529,6 +530,7 @@ void GetData(String url, int i) {
       }
       if (MetarData.length() < 500)   {                           // NO UPDATE : NO MetarData DOWNLOADED
         Serial.printf("%s\tNo:%d\tNo Update ~ Skipped Group, in GetData : No MetarData Downloaded : %i bytes  httpCode = %i\n", Clock, i, MetarData.length(), httpCode);
+        Serial.printf("%s\tNo:%d\tIn GetData : MetarData Size=%d  MaxAllocHeap=%d  Free=%d  httpCode=%d ~ %s\n", Clock, i, MetarData.length(), ESP.getMaxAllocHeap(), ESP.getMaxAllocHeap() - MetarData.length(), httpCode, https.errorToString(httpCode).c_str());
         httpCode = -200;                                          // NO UPDATE for this Group of Stations, in ParseMetar
         Network_Status ();               // WiFi Network Error
       }
@@ -557,7 +559,7 @@ void Network_Status() {
 }
 
 
-// ***********   Reset All Parameters if Station Not Found in ParseMetar/Go_Serverl
+// ***********   Reset All Parameters if Station Not Found in ParseMetar
 void Reset_All_Parameters(int i) {
   Category[i] = "NF";             // Not Found
   Sky[i] = "NA";                  // Not Found
@@ -636,15 +638,8 @@ void Decodedata(int i, String station, String Parsed_metar) {
   if (search_End < search_From)  search_End = search_Raw_Text;             // Something is Wrong : Use Default for End
   if (search_End > search_Raw_Text)  search_End = search_Raw_Text;         // Something is Wrong : Use Default for End
 
-  // Append Minutes ago updates on every cycle
-  Update_Time();                                               // Get Time : Hour & Minute
-  int obsh = Parsed_metar.substring(7, 9).toInt();             // METAR Obs Time - Hour
-  int obsm = Parsed_metar.substring(9, 11).toInt();            // METAR Obs Time - Minute
-  int ago = ((Hour - obsh) * 60) + Minute - obsm;              // Minutes ago
-  if (ago < 0)    ago = ((24 - obsh) * 60) + Minute - obsm;
-
-  // *** CREATE  Station Metar : Codes updates on every cycle
-  StationMetar[i] = Parsed_metar.substring(search_Strt, search_End) + " (" + String(ago) + "m&nbspago)";  // Append ago
+  // *** CREATE  Station Metar
+  StationMetar[i] = Parsed_metar.substring(search_Strt, search_End);
 
   // *** UPDATE/SKIP this Station *** : Check Last Observation Time with [Parsed_metar Observation Time] in StationMetar
   if (old_obs_time != StationMetar[i].substring(0, 4))  {       // ***  If NO UPDATE : SKIP this STATION  ***
@@ -985,19 +980,19 @@ void Decodedata(int i, String station, String Parsed_metar) {
     search0 = StationMetar[i].indexOf("G");
     search1 = StationMetar[i].indexOf("KT");
     if (search0 > 0 && search1 - search0 > 2)
-      Sig_Weather[i] =  Sig_Weather[i] + "Gusts to " + StationMetar[i].substring(search1 - 2, search1) + " KTS&nbsp&nbsp&nbsp";
+      Sig_Weather[i] =  Sig_Weather[i] + "Gusts to " + StationMetar[i].substring(search1 - 2, search1) + " KTS<br>";
 
     // Variable Wind Dir
     search0 = StationMetar[i].indexOf("0V");
     search1 = StationMetar[i].indexOf("FT");
     if (search0 > 0  && search1 < 0)
-      Sig_Weather[i] = Sig_Weather[i] + "Wind Direction Variable: " + StationMetar[i].substring(search0 - 2, search0 + 5) + "&nbsp&nbsp&nbsp";
+      Sig_Weather[i] = Sig_Weather[i] + "Wind Direction Variable: " + StationMetar[i].substring(search0 - 2, search0 + 5) + "<br>";
 
     // Significant Weather
     search0 = StationMetar[i].indexOf("SM R");
     search1 = StationMetar[i].indexOf("FT");
     if (search0 > 0 && search1 > 0)
-      Sig_Weather[i] = Sig_Weather[i] + "Runway Vis: " + StationMetar[i].substring(search0 + 3, search1 + 2) + "&nbsp&nbsp&nbsp";
+      Sig_Weather[i] = Sig_Weather[i] + "Runway Vis: " + StationMetar[i].substring(search0 + 3, search1 + 2) + "<br>";
 
     // Significant Weather in metar and making readable Weather
     if (StationMetar[i].indexOf("BL") > 0)    Sig_Weather[i] = Sig_Weather[i] + " Blowing";
@@ -1037,6 +1032,9 @@ void Decodedata(int i, String station, String Parsed_metar) {
     if (StationMetar[i].indexOf("UP ") > 0)   Sig_Weather[i] = Sig_Weather[i] + " Unknown Precipitation; ";
 
     if (Sig_Weather[i] == "")  Sig_Weather[i] = "None";
+
+    if (Sig_Weather[i].substring(Sig_Weather[i].length() - 4, Sig_Weather[i].length()) == "<br>")    // Remove last "<br>"
+      Sig_Weather[i] = Sig_Weather[i].substring(0, Sig_Weather[i].length() - 4);
 
     // Searching temp_c        TempC[i] = deg C
     search0 = Parsed_metar.indexOf("<temp_c") + 8;
@@ -1662,7 +1660,6 @@ void Set_Cat_LED (int i)  {
 }
 
 
-
 // *********** Display Visibility [Red White] on LEDS
 void Display_Vis_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
@@ -1677,7 +1674,6 @@ void Display_Vis_LEDS (int wait) {
 }
 
 
-
 // *********** Display Winds [Aqua] on LEDS
 void Display_Wind_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
@@ -1690,11 +1686,17 @@ void Display_Wind_LEDS (int wait) {
 }
 
 
-// *********** Display Temperatures [Blue Green Yellow Orange Red] on LEDS
+// *********** Display Temperatures [Blue Green Yellow Orange Red Purple] on LEDS
 void Display_Temp_LEDS (int wait) {
   for (byte i = 1; i < (No_Stations + 1); i++) {
-    byte hue = 160 - TempC[i] * 4;         //  purple blue green yellow orange red [160 ~ 0 ]
-    leds[i - 1] = CHSV( hue, 180, 150);   // ( hue, sat, bright )
+    int hue = 160 - TempC[i] * 4;           //  purple blue green yellow orange red [160 ~ 0 ]
+
+
+    //if (hue < 20)  hue = 220 + hue;         //  and pink to purple < 35C or 95F
+
+
+    if (hue < 32)  hue = 220 + hue;         //  and pink to purple < 32C or 90F
+    leds[i - 1] = CHSV( hue, 180, 150);     // ( hue, sat, bright )
     if (TempC[i] == 0 || Category[i] == "NF")  leds[i - 1] = CHSV( 0, 0, 0);
   }
   FastLED.show();
@@ -2223,13 +2225,15 @@ void Go_Server ( void * pvParameters ) {
 // ***********   Update Minutes Ago
 void Update_Ago(int i)  {
   int search0 = StationMetar[i].indexOf("Z");
+  if (search0 < 0)  return;
   byte obsh = StationMetar[i].substring(search0 - 4, search0 - 2).toInt();  // METAR Obs Time - Hour
   byte obsm = StationMetar[i].substring(search0 - 2, search0).toInt();      // METAR Obs Time - Minute
   int ago = ((Hour - obsh) * 60) + Minute - obsm;                           // Minutes Ago
   if (ago < 0)    ago = ((24 - obsh) * 60) + Minute - obsm;
   int search1 = StationMetar[i].indexOf("(");
-  if (search0 > 0 && search1 > 0)
-    StationMetar[i] =  StationMetar[i].substring(0, search1) + "(" + String(ago) + "m&nbspAgo)";
+  if (search1 < 0)  StationMetar[i] = StationMetar[i] + " (" + String(ago) + "m&nbspAgo)";   // Add Minutes Ago
+  else
+    StationMetar[i] = StationMetar[i].substring(0, search1 - 1) + " (" + String(ago) + "m&nbspAgo)";   // Update Minutes Ago
 }
 
 
