@@ -284,8 +284,8 @@ byte Hour = 0;                // Latest Hour
 byte Minute = 0;              // Latest Minute
 String Last_Up_Time;          // Last Update Time  "HH:MM"
 byte Last_Up_Min = 0;         // Last Update Minute
-byte Group_of_Stations = 13;  // Download a Group of <28 Stations at a time, if connection errors - reduce this
-byte Update_Interval = 6;     // Updates Data greater than 5 Minutes (Don't overload AVIATIONWEATHER.GOV)
+byte Group_of_Stations = 20;  // Download a Group of <28 Stations at a time, if connection errors - reduce this
+byte Update_Interval = 10;    // Updates Data greater than 5 Minutes (Don't overload AVIATIONWEATHER.GOV)
 byte Count_Down = 0;          // Count to Next Update
 byte Station_Num = 1;         // Station # for Server - flash button
 int httpCode;                 // Error Code
