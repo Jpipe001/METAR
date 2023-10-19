@@ -2039,7 +2039,6 @@ void Go_Server ( void * pvParameters ) {
                   html_code += "<TR><TD>Enter<FONT COLOR='Navy'><B> Any Airport ID </B></FONT>Code:</TD><TD>";
                   html_code += "<INPUT TYPE='text' NAME='Airport_Code' SIZE='5'>";
                   html_code += "</TD></TR></TABLE></FORM>";
-                  client.print(html_code);
 
                   // Update LED and Current Time in STATION
                   Display_LED(sta_n, 300);   //  Display One Station LED
@@ -2052,7 +2051,7 @@ void Go_Server ( void * pvParameters ) {
                   String CountDown_Time = "<FONT COLOR='Purple'>Current Time : " + String(Clock) + " UTC &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Next Update in less than 0 Minutes</FONT><BR>";
                   CountDown_Time.replace("than 0", "than " + String(Count_Down));
                   if (Count_Down == 1)  CountDown_Time.replace("Minutes", "Minute");
-                  client.print(CountDown_Time);
+                  html_code += CountDown_Time;
 
                   // Display STATION Table  ***********
                   String Bcol = "BORDERCOLOR=";
@@ -2063,7 +2062,7 @@ void Go_Server ( void * pvParameters ) {
                   if (Category[sta_n] == "NA")   Bcol = Bcol + "'Black'";
                   if (Category[sta_n] == "NF")   Bcol = Bcol + "'Grey'";
                   String color = "<TD><FONT " + Bcol.substring(6, Bcol.length()) + ">";
-                  html_code = "<TABLE " + Bcol + " BORDER='3' CELLPADDING='5'>";
+                  html_code += "<TABLE " + Bcol + " BORDER='3' CELLPADDING='5'>";
 
                   // Display Flight Category in STATION
                   html_code += "<TR><TD>Flight Category</TD>" + color + "<B>" + String(Category[sta_n]) + "</B></FONT>  for " + String(Stations[sta_n]) + "</TD></TR>";
@@ -2219,16 +2218,14 @@ void Go_Server ( void * pvParameters ) {
                   if (TempC[sta_n] == 0 || Altim[sta_n] == 0)   html_code += "<FONT COLOR='Purple'>NA</TD></TR>"; else  html_code += "<FONT COLOR='Purple'>" + String(Density_Alt / 3.28, 1) + " m&nbsp&nbsp&nbsp:&nbsp&nbsp&nbsp" + String(Density_Alt, 1) + " Ft</TD></TR>";
 
                   html_code += "</FONT></TABLE>";             //  End of Table in Station
-                  client.print(html_code);
 
                   // Display LINK:  AIRPORT INFORMATION from AirNav.com
                   // https://www.airnav.com/airport/Ksav
                   String airnav = "<BR><FONT COLOR='Orange'><a href='https://www.airnav.com/airport/" + String(Stations[sta_n].substring(0, 4)) + "'><B>AIRPORT INFORMATION</B></a>";
-                  html_code = airnav + " <FONT SIZE='-1'>for US Airports<BR>Note: Press the BACK ARROW to return to THIS PAGE<BR></FONT>";
-                  client.print(html_code);
+                  html_code += airnav + " <FONT SIZE='-1'>for US Airports<BR>Note: Press the BACK ARROW to return to THIS PAGE<BR></FONT>";
 
                   // Display Foooter and Close
-                  html_code = "<BR><FONT COLOR='Navy' FONT SIZE='-1'>File Name &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: " + String(ShortFileName);
+                  html_code += "<BR><FONT COLOR='Navy' FONT SIZE='-1'>File Name &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp: " + String(ShortFileName);
                   html_code += "<BR>URL Address &nbsp: " + SW_addr;
                   html_code += "<BR>Connected to &nbsp: " + String(ssid);
                   html_code += "<BR>H/W Address &nbsp: " + HW_addr;
