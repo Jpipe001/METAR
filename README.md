@@ -7,22 +7,33 @@ This is a project to WOW your friends and colleges.
 + Most Metar Charts use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
 It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
   
++ This will also work with WS2811 leds that other Metar Charts use and can be up ugraded easily.
+
++ It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
 Which shows decoded METAR information and much more. Please see examples below.
 
 This programme uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
 
+---
+
 + A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
+
+---
 
 + HTML Pages, showing a Summary of the METAR codes and the Invividual Station Display of Decoded Data on a Local Network.
 
-Either or Both of the above can be implemented.
+---
+
+EITHER or BOTH of the above can be implemented.
 
 The number and names of the Stations are Configurable for your application.
 
-+ GETTING DATA : Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
++ GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.      
+  (Latest Revision)
+---
 
-+ WIRING OF LEDS : Three wires to  a set of WS2812 LEDS (Add a 220 to 330 resistor in the Data Line).
-+
++ WIRING OF LEDS : Three wires to  a set of LEDS (Add a 220 to 330 resistor in the Data Line).
+
 
 ![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
 
@@ -38,24 +49,34 @@ Note: With less than 50 LEDS an external Power Supply is not neccessary and can 
 
 ![IMG_2947](https://user-images.githubusercontent.com/24758833/157293897-e3d9f13f-debc-4f80-a27e-ef0c16ccbe5c.JPG)
 
+
 + So the Front of the chart looks like this:
+
+ Showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
 ![IMG_2916](https://user-images.githubusercontent.com/24758833/157294109-c94372d3-fa67-4a66-8e46-7be0fdde13f8.JPG)
 
+Of course, this can all be mounted in a frame and be much more presentable.
+
+---
 
 + HTML DISPLAYS : Can be accesed by any device connected to a WiFi local network.
 
 + Just Enter the Logical Address http://metar.local or the IP Address in your Browser.
-+ METAR Summary Display Example:
 
+---
+
++ METAR Summary Display Example:
 
 ![METAR_Summary](https://user-images.githubusercontent.com/24758833/197342754-2bac1db7-003e-47b2-8072-c6f3a0c6f7f8.png)
 
+---
 
 + METAR Station Display Example:
 
-
 ![image](https://user-images.githubusercontent.com/24758833/183297159-c19801f8-f4aa-4bc4-815a-bca285adbfa8.png)
+
+---
 
 + Added OVER THE AIR updates:
 
@@ -69,5 +90,7 @@ Then use the menu  "Tools", "Port" and select  metar xx.x.x.xx and "Upload" agai
 
 There are some videos on how to use "OTA" on YouTube.
 
-+ See Additional Remarks/Comments in the program file.
+---
+
++ Upgraded, See Additional Remarks/Comments in the program file.
 + Not for Commercial Use.
