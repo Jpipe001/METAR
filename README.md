@@ -7,12 +7,12 @@ This is a project to WOW your friends and colleges.
 + Most Metar Charts use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
 It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
   
-+ This will also work with WS2811 leds that other Metar Charts use and can be up ugraded easily.
++ Works with WS2811 leds that other Metar Charts use and can be up ugraded easily.
 
 + It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
 Which shows decoded METAR information and much more. Please see examples below.
 
-This programme uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
+The code uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
 
 ---
 
