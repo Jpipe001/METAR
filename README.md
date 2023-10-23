@@ -4,17 +4,17 @@ This is a METAR MAP project to WOW your friends and colleges.
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
 + Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
 
-+ This Metar Map works WORLDWIDE to show Airport Metars from Avationweather.Gov.
++ This Metar Map works WORLDWIDE to show Airport METARs from Avationweather.Gov.
 
 + Most Metar Maps use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
-It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
+It uses HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display without needing extra hardware.
   
 + Works with WS2811 leds that other Metar Maps use and can be up ugraded easily.
 
-+ It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
-Which shows decoded METAR information and much more. Please see examples below.
++ It uses HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display without needing extra hardware. 
+Which shows decoded METAR information and much more.  Please see examples below.
 
-The code uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests :
+The code uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests.
 
 ---
 
@@ -52,13 +52,11 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 ![IMG_2947](https://user-images.githubusercontent.com/24758833/157293897-e3d9f13f-debc-4f80-a27e-ef0c16ccbe5c.JPG)
 
 
-+ So the Front of the map looks like this:
-
- Showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
++ So the Front of the chart looks like this: Showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
 ![IMG_2916](https://user-images.githubusercontent.com/24758833/157294109-c94372d3-fa67-4a66-8e46-7be0fdde13f8.JPG)
 
-Of course, this can all be mounted in a frame and be much more presentable.
+Of course, All of this can be mounted in a frame and be made much more presentable.
 
 ---
 
@@ -94,5 +92,5 @@ There are some videos on how to use "OTA" on YouTube.
 
 ---
 
-+ Upgraded, See Additional Remarks/Comments in the program file.
++ Updated, See Additional Remarks/Comments in the program file.
 + Not for Commercial Use.
