@@ -37,7 +37,7 @@ The number and names of the Stations are Configurable for your application.
 
 ![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
 
-Note: With less than 50 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
+Note: With less than 60 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
 
 
 + MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.
