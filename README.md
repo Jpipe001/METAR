@@ -10,18 +10,17 @@ This is a METAR MAP project to WOW your friends and colleges.
   
 + Works with WS2811 Leds that other Metar Maps use and can be up ugraded easily.
 
-+ It uses HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display without needing extra hardware. 
-Which shows decoded METAR information and much more.  Please see examples below.
++ It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display, without needing extra hardware and shows decoded METAR information and much more.  Please see examples below.
 
-The code uses the two ESP32 cores, one to Get Data and Display Leds, the other to run a webserver for Creating Web Pages and Handling Requests.
-
----
-
-+ A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
+The code uses the two ESP32 cores, one to Get Data and Display Categories on a chain of Leds, the other to run a webserver for Creating Web Pages and Handling Requests.
 
 ---
 
-+ HTML Pages, showing a Summary of the Airport METAR codes and the Invividual Station Display of Decoded Data on a Local Network.
++ A chain of up to 100 Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
+
+---
+
++ Creating HTML Pages, showing an Airport Summary Display of METAR codes and the Invividual Station Display of Decoded Data on a Local Network, please see examples below.
 
 ---
 
@@ -29,8 +28,7 @@ EITHER or BOTH of the above can be implemented.
 
 The number and names of the Aiports are Configurable for your application.
 
-+ GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.      
-  (Incuding Latest Revision)
++ GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.  (Includes the Latest Revision)
 ---
 
 + WIRING OF LEDS : Three wires to  a set of LEDS (Add a 220 to 330 resistor in the Data Line).
