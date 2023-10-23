@@ -6,10 +6,9 @@ This is a METAR MAP project to WOW your friends and colleges.
 
 + This Metar Map works WORLDWIDE to show Airport METARs from Avationweather.Gov.
 
-+ Most Metar Maps use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
-It uses HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display without needing extra hardware.
++ Most Metar Maps use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.
   
-+ Works with WS2811 leds that other Metar Maps use and can be up ugraded easily.
++ Works with WS2811 Leds that other Metar Maps use and can be up ugraded easily.
 
 + It uses HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display without needing extra hardware. 
 Which shows decoded METAR information and much more.  Please see examples below.
