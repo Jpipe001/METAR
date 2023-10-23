@@ -29,7 +29,7 @@ EITHER or BOTH of the above can be implemented.
 The number and names of the Stations are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.      
-  (Latest Revision)
+  (Incuding Latest Revision)
 ---
 
 + WIRING OF LEDS : Three wires to  a set of LEDS (Add a 220 to 330 resistor in the Data Line).
