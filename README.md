@@ -1,10 +1,10 @@
 # METAR
-This is a project to WOW your friends and colleges.
+This is a Metar Chart project to WOW your friends and colleges.
 
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
 + Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
 
-+ Works WORLDWIDE with Avationweather.Gov.
++ This Metar Chart works WORLDWIDE to show Airport Metars from Avationweather.Gov.
 
 + Most Metar Charts use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
 It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
@@ -18,17 +18,17 @@ The code uses the two ESP32 cores, one to Get Data and Display Leds, the other t
 
 ---
 
-+ A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
++ A chain of up to 100 leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
 ---
 
-+ HTML Pages, showing a Summary of the METAR codes and the Invividual Station Display of Decoded Data on a Local Network.
++ HTML Pages, showing a Summary of the Airport METAR codes and the Invividual Station Display of Decoded Data on a Local Network.
 
 ---
 
 EITHER or BOTH of the above can be implemented.
 
-The number and names of the Stations are Configurable for your application.
+The number and names of the Aiports are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.      
   (Incuding Latest Revision)
