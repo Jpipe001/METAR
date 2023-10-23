@@ -4,6 +4,8 @@ This is a project to WOW your friends and colleges.
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
 + Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
 
++ Works WORLDWIDE with Avationweather.Gov.
+
 + Most Metar Charts use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.  
 It uses HTML displays that your favorite web browser can access to display a Summary Display and a Station Display without needing extra hardware.
   
