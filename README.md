@@ -16,7 +16,7 @@ The code uses the two ESP32 cores, one to Get Data and Display Categories on a c
 
 ---
 
-+ A chain of up to 100 Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
++ A chain of up to 100 Color changing Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
 
 ---
 
