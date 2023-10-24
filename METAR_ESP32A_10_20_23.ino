@@ -44,8 +44,8 @@
   download software and (optionally) display any program messages using the (built in) Serial Monitor.
   (Watch Getting Started with ESP32 video from DroneBot Workshop, link above).
 
-  Updates METARS approximately every six minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
-  A set of WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
+  Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.
+  A set of WS2812 Color changing LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
   Then cycles through all the stations and flashes individually for:
   Wind Gusts(Cyan)[suspendable], Precipitation(Green/White), Ice(Blue), Other(Yellow) and Significant Change(Orange).
   Then displays "RAINBOW" for all stations, for Visibility [Yellow to Red], Wind Speed Gradient [Cyan],
@@ -78,7 +78,7 @@
   Added AirNav link in Station Display  04/08/23
   Added Remarks to Display Summary 10/14/23
   Revised Link to aviationweather 10/17/23
-  Minor Improvements to make things Better 10/17/23
+  Minor Improvements to make things Better 10/20/23
 */
 
 // Include the folling Libaries:
