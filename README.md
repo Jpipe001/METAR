@@ -20,7 +20,7 @@ The code uses the two ESP32 cores, one to Get Data and Display Categories on a c
 
 ---
 
-+ Creating HTML Pages, showing an Airport Summary Display of METAR codes and the Invividual Station Display of Decoded Data on a Local Network, please see examples below.
++ Creating HTML Pages, showing an Airport Summary Display of METAR codes and the Invividual Station Display of Decoded Data on a Local Network, please see examples below.  No LEDS required.
 
 ---
 
