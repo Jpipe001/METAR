@@ -71,7 +71,12 @@ Of course, All of this can be mounted in a frame and be made much more presentab
 
 + METAR Station Display Example:
 
-![image](https://user-images.githubusercontent.com/24758833/183297159-c19801f8-f4aa-4bc4-815a-bca285adbfa8.png)
+![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
+
+---
++ Recently Added  ~   AirNav link in Station Display
+  
+ + Recently Added  ~   Radar link in Station Display
 
 ---
 
