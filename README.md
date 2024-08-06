@@ -14,24 +14,22 @@ This is a METAR MAP project to WOW your friends and colleges.
 
   ---
   YOU WILL NEED:
- + The Arduino IDE Software to run and load the code, which is free.
+ + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
  +  A chain of up to 100 Color changing Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
  +  Note: The LEDS are not required to get just the displays.
 ---
 
-In the software, the number and names of the Aiports are Configurable for your application.
+In the software, the number and names of the Airports are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.  (Includes the Latest Revision)
 ---
 
 + WIRING OF LEDS : Three wires to  a set of LEDS (Add a 330 resistor in the Data Line).
 
-
 ![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
 
 Note: With less than 60 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
-
 
 + MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.
 + Cut the led strip up and tin the connections.
