@@ -31,7 +31,7 @@ The number and names of the Aiports are Configurable for your application.
 + GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.  (Includes the Latest Revision)
 ---
 
-+ WIRING OF LEDS : Three wires to  a set of LEDS (Add a 220 to 330 resistor in the Data Line).
++ WIRING OF LEDS : Three wires to  a set of LEDS (Add a 330 resistor in the Data Line).
 
 
 ![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
@@ -69,16 +69,16 @@ Of course, All of this can be mounted in a frame and be made much more presentab
 
 ---
 
-+ METAR Station Display Example:
++ Updated METAR Station Display Example:
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
 ---
-+ Recently Added  ~   AirNav Link in Station Display
++ Recently Added  AIRPORT INFORMATION  ~  AirNav Link in Station Display
 
 ![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
 
- + Recently Added  ~   Radar Link in Station Display
+ + Recently Added  AIRPORT RADAR  ~  Radar Link in Station Display
 
 ![2024-08-04-KFLL_Radar](https://github.com/user-attachments/assets/8880e728-0b18-411c-9fa9-31f1432b6336)
 
