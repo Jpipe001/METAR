@@ -74,13 +74,17 @@ Of course, All of this can be mounted in a frame and be made much more presentab
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
 ---
-+ Recently Added  ~   AirNav link in Station Display
-  
- + Recently Added  ~   Radar link in Station Display
++ Recently Added  ~   AirNav Link in Station Display
+
+![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
+
+ + Recently Added  ~   Radar Link in Station Display
+
+![2024-08-04-KFLL_Radar](https://github.com/user-attachments/assets/8880e728-0b18-411c-9fa9-31f1432b6336)
 
 ---
 
-+ Added OVER THE AIR updates:
++ Previously Added OVER THE AIR updates:
 
 To use this you need to add the library "Over_The_Air.h" in this respository to the SAME folder as the METAR program.
 
