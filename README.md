@@ -84,7 +84,7 @@ Edit the METAR program with your credentials.
 
 First: "Upload" as normal, using a cable, to initialise OTA.
 
-Then use the menu  "Tools", "Port" and select  metar xx.x.x.xx and "Upload" again, then it should work "Over the Air".  (Direct connection with the computer is not required.)
+Then use the menu  "Tools", "Port" and select  metar xx.x.x.xx and "Upload" again, then it should work "Over the Air".  (Direct connection with the computer is now not required.)
 
 There are some videos on how to use "OTA" on YouTube.
 
