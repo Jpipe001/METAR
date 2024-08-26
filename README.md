@@ -16,8 +16,8 @@
   #### YOU WILL NEED:
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
- +  A chain of up to 100 Color changing Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
- +  Note: **The LEDS are not required to just get these cool displays.**
+ +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
+   #### Note: The LEDS are not required to just get these Colorful Displays.
 ---
 
 In the software, the number and names of the Airports are Configurable for your application.
