@@ -1,10 +1,10 @@
 # METAR
-#### This is a METAR MAP project to WOW your friends and colleges.
+### This is a METAR MAP project to WOW your friends and colleges.
 
 + In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
-+ Created by John Pipe with lots of help from David Bird and some code from Rui Santos.
++ Created by John Pipe with lots of help from **David Bird** and some code from **Rui Santos.**
 
-+ This Metar Map works WORLDWIDE to show Airport METARs from Avationweather.Gov.
++ This Metar Map works **WORLDWIDE** to show Airport METARs from Avationweather.Gov.
 
 + Most Metar Maps use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.
   
@@ -13,7 +13,7 @@
 + It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display, without needing extra hardware and shows decoded METAR information and much more.  Please see examples below.
 
   ---
-  YOU WILL NEED:
+  #### YOU WILL NEED:
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
  +  A chain of up to 100 Color changing Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
@@ -29,7 +29,7 @@ In the software, the number and names of the Airports are Configurable for your 
 
 ![ESP32_ _leds_wiring](https://user-images.githubusercontent.com/24758833/197342655-f6e17e1f-f41f-4e63-b6c1-63a42799240c.png)
 
-Note: With less than 60 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at minimal brightness.
+Note: With less than 60 LEDS an external Power Supply is not neccessary and can be driven by the ESP32 but at **minimal brightness.**
 
 + MOUNTING OF LEDS : I found it useful to mark the led strip with an arrow on the positive connection showing data in/out direction to make it easier to wire up later.
 + Cut the led strip up and tin the connections.
@@ -45,11 +45,11 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 
 ![IMG_2916](https://user-images.githubusercontent.com/24758833/157294109-c94372d3-fa67-4a66-8e46-7be0fdde13f8.JPG)
 
-Of course, All of this can be mounted in a frame and be made much more presentable.
+#### Of course, All of this can be mounted in a frame and be made much more presentable.
 
 ---
 
-+ HTML DISPLAYS : Can be accesed by any device connected to a WiFi local network.
++ HTML DISPLAYS : Can be accesed by **any device connected to the WiFi local network.**
 
 + Just Enter the Logical Address http://metar.local or the IP Address in your Browser.
 
@@ -61,16 +61,16 @@ Of course, All of this can be mounted in a frame and be made much more presentab
 
 ---
 
-+ Updated METAR Station Display Example:
++ **Updated METAR** Station Display Example:
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
 ---
-+ Recently Added  AIRPORT INFORMATION  ~  AirNav Link in Station Display
++ **Recently** Added  AIRPORT INFORMATION  ~  AirNav Link in Station Display
 
 ![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
 
- + Recently Added  AIRPORT RADAR  ~  Radar Link in Station Display
+ + **Recently Added**  AIRPORT RADAR  ~  Radar Link in Station Display
 
 ![2024-08-04-KFLL_Radar](https://github.com/user-attachments/assets/8880e728-0b18-411c-9fa9-31f1432b6336)
 
