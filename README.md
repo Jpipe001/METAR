@@ -1,7 +1,7 @@
 # METAR
 ### This is a METAR MAP project to WOW your friends and colleges.
 
-+ In Memory of **F. Hugh Magee**, brother of John Magee author of a **cool poem** called **HIGH FLIGHT**.
++ In Memory of **F. Hugh Magee**, brother of John Magee (WW2 Fighter Ace) and author of a **cool poem** called **HIGH FLIGHT**.
 + Created by John Pipe with lots of help from **David Bird** and some code from **Rui Santos.**
 
 + This Metar Map works **WORLDWIDE** to show Airport METARs from Avationweather.Gov.
@@ -61,22 +61,22 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 
 ---
 
-+ **Updated METAR** Station Display Example:
++ **Updated METAR Station Display** Example:
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
 ---
-+ **Recently** Added  AIRPORT INFORMATION  ~  AirNav Link in Station Display for US Airports
++ **Recently Added  AIRPORT INFORMATION**  ~  AirNav Link in Station Display for US airports
 
 ![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
 
- + **Recently Added**  AIRPORT RADAR  ~  Radar Link in Station Display for US Airports
+ + **Recently Added  AIRPORT RADAR**  ~  Radar Link in Station Display for US airports
 
 ![2024-08-04-KFLL_Radar](https://github.com/user-attachments/assets/8880e728-0b18-411c-9fa9-31f1432b6336)
 
 ---
 
-+ **Previously** Added OVER THE AIR updates:
++ **Previously Added OVER THE AIR updates:**
 
 To use this you need to add the library "Over_The_Air.h" in this respository to the SAME folder as the METAR program.
 
