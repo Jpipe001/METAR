@@ -17,7 +17,7 @@
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
  +  A chain of up to 100 Color changing Leds (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
- +  Note: The LEDS are not required to get just the displays.
+ +  Note: **The LEDS are not required to just get these cool displays.**
 ---
 
 In the software, the number and names of the Airports are Configurable for your application.
@@ -65,8 +65,9 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
+#### Any Airport ID can be enterd even if it is not in the database.
 ---
-+ **Recently Added  AIRPORT INFORMATION**  ~  AirNav Link in Station Display for US airports
++ #### Recently Added  AIRPORT INFORMATION**  ~  AirNav Link in Station Display for US airports
 
 ![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
 
