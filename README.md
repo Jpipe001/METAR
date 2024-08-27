@@ -49,37 +49,37 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 
 ---
 
-+ HTML DISPLAYS : Can be accesed by **any device connected to the WiFi local network.**
++ HTML DISPLAYS : Can be accesed by any device connected to the **WiFi local network.**
 
 + Just Enter the Logical Address http://metar.local or the IP Address in your Browser.
 
 ---
 
-+ METAR Summary Display Example:
++ **METAR Summary Display** Example:
 
 ![METAR_Summary](https://user-images.githubusercontent.com/24758833/197342754-2bac1db7-003e-47b2-8072-c6f3a0c6f7f8.png)
 
 ---
 
-+ **Updated METAR Station Display** Example:
++ **Updated: METAR Station Display** Example:
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
-#### Any Airport ID can be enterd even if it is not in the database.
+#### "Any Airport ID" can be enterd, even if it is not in the database.
 ---
-+ #### Recently Added  AIRPORT INFORMATION**  ~  AirNav Link in Station Display for US airports
++ **Recently Added:**  AIRPORT INFORMATION  ~  AirNav Link in Station Display for US airports
 
 ![2024-08-04-KFFL_AirNav](https://github.com/user-attachments/assets/09c26d76-98c2-424a-830e-2b9cf100d2bd)
 
- + **Recently Added  AIRPORT RADAR**  ~  Radar Link in Station Display for US airports
+ + **Recently Added:**  AIRPORT RADAR  ~  Radar Link in Station Display for US airports
 
 ![2024-08-04-KFLL_Radar](https://github.com/user-attachments/assets/8880e728-0b18-411c-9fa9-31f1432b6336)
 
 ---
 
-+ **Previously Added OVER THE AIR updates:**
++ **Previously Added** OVER THE AIR updates:
 
-To use this you need to add the library "Over_The_Air.h" in this respository to the SAME folder as the METAR program.
+To use this you need to add the library "Over_The_Air.h" in this respository to the **SAME** folder as the METAR program.
 
 Edit the METAR program with your credentials.
 
