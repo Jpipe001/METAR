@@ -1,4 +1,4 @@
-# METAR
+## Decoded METAR Map and Displays
 ### This is a METAR MAP project to WOW your friends and colleges.
 
 + In Memory of **F. Hugh Magee**, brother of John Magee (WW2 Fighter Ace) and author of a **cool poem** called **HIGH FLIGHT**.
@@ -10,19 +10,19 @@
   
 + Works with WS2811 Leds that other Metar Maps use and can be up ugraded easily.
 
-+ It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and a Station Display, without needing extra hardware and shows decoded METAR information and much more.  Please see examples below.
++ It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and Station Displays.  This shows decoded METAR information and much more without needing extra hardware.  Please see examples below.
 
   ---
-  #### YOU WILL NEED:
+ #### YOU WILL NEED:
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
  +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus Weather indication and more.
-   #### Note: The LEDS are not required to just get these Colorful Displays.
+   #### Note: The LEDS are not required to just get these Color Coded Displays of the Airport Summary and Decoded METARs, see below.
 Feel free to down load the above files and take a "test drive".
 
 ---
 
-In the software, the number and names of the Airports are Configurable for your application.
+#### In the software, the number and names of the Airports are Configurable for your application.
 
 + GETTING DATA : Updates METARS approximately every ten minutes, so nearly REAL TIME data, from AVIATIONWEATHER.GOV.  (Includes the Latest Revision)
 ---
