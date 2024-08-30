@@ -17,7 +17,7 @@
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
  +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus Weather indication and more.
-   #### Note: The LEDS are not required to just get these Color Coded Displays of the Airport Summary and Decoded METARs, see below.
+   #### Note: The LEDS are not required to just get these Color Coded Displays of the Airport Summary and Decoded METARs, see examples below.
 Feel free to down load the above files and take a "test drive".
 
 ---
