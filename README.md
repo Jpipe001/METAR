@@ -6,7 +6,7 @@
 
 + This Metar Map works **WORLDWIDE** to show Airport METARs from Avationweather.Gov.
 
-+ Most Metar Maps use a Raspberry Pi, this uses a less expensive option of ESP32 and gives much more.
++ Most Metar Maps use a Raspberry Pi, this uses a **less expensive option** of ESP32 and gives much more.
   
 + Works with WS2811 Leds that other Metar Maps use and can be up ugraded easily.
 
@@ -16,8 +16,10 @@
   #### YOU WILL NEED:
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
- +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus more.
+ +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport Flight Category with Colors, GREEN, BLUE, RED and MAGENTA plus Weather indication and more.
    #### Note: The LEDS are not required to just get these Colorful Displays.
+Feel free to down load the above files and take a "test drive".
+
 ---
 
 In the software, the number and names of the Airports are Configurable for your application.
