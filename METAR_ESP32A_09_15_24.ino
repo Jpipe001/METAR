@@ -49,7 +49,7 @@
   A set of WS2811 or WS2812 LEDS show all station CATEGORIES (similar to the HomebuiltHELP video, link above).
   Then cycles through all the stations and flashes individually for:
   Wind Gusts(Cyan)[suspendable], Precipitation(Green/White), Ice(Blue), Other(Yellow).
-  Then displays GRADIENTS [suspendable] for all stations, for Visibility [White to Red], Wind Direction [Yellow to Red] ~ Suspended,
+  Then displays GRADIENTS [suspendable] for all stations, for Visibility [White to Red], Wind [Shades of Cyan],
   Temperature Gradient [Blue Green Yellow Orange Red] and Altimeter Pressure Gradient [Blue to Purple].
 
   To use "Over_The_Air".  First: "Upload" code as normal, using a cable, to initialise OTA.
