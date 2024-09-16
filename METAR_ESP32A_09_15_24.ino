@@ -65,7 +65,7 @@
   Makes a GREAT Christmas Tree Chain of Lights, TOO (and a Good Conversation Piece).
 
   OPTIONAL:
-   In Main Loop: Turn LEDS OFF at NIGHT  5PM to 8AM ~ Local Time ~ Enabled
+   In Main Loop: Turn LEDS OFF at NIGHT  5PM to 8AM ~ Local Time ~ Disabled
    In Main Loop: Reduce LED Power usage while getting Data ~ Disabled
    In Display_Metar_LEDS: Gradient Effect ~ Partially Enabled
    In Single_Metar: Print Stations that were Updated  ~ Disabled
@@ -89,7 +89,7 @@
 // Include the following Libaries:
 #include <Arduino.h>
 #include "Over_The_Air.h" // Over The Air Software Updates  *** Put This File in the SAME Folder as METAR ***
-#include <FastLED.h>      // FastLED  by Daniel Garcia  *** Use Version 3.7.0  ***
+#include <FastLED.h>      // FastLED  by Daniel Garcia  *** Use Version 3.7.4  ***
 #include <WiFiMulti.h>    // WifiMulti_Generic  by Khoi Hoang
 #include <HTTPClient.h>   // HttpClient  by Adrian McEwen
 #include <ESPmDNS.h>      // MDNS_Generic  by Khoi Hoang
