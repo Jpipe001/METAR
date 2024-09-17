@@ -8,7 +8,7 @@
 
 + Most Metar Maps use a Raspberry Pi, this uses a **less expensive option** of ESP32 and gives much more.
   
-+ Works with WS2811 Leds that other Metar Maps use and can be up ugraded easily.
++ Works with WS2811 Leds that other Metar Maps use and can be easily upgraded.
 
 + It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and Station Displays.  This shows decoded METAR information and much more without needing extra hardware.  Please see examples below.
 
@@ -82,8 +82,6 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 + **Previously Added** OVER THE AIR updates:
 
 To use this you need to add the library "Over_The_Air.h" in this respository to the **SAME** folder as the METAR program.
-
-Edit the METAR program with your credentials.
 
 First: "Upload" as normal, using a cable, to initialise OTA.
 
