@@ -3,7 +3,7 @@
  * See also on Github : https://github.com/Jpipe001/LEDpicker  LED Color Picker
 
   METAR Reporting with LEDs and Local WEB SERVER
-  In Memory of F. Hugh Magee, brother of John Magee author of poem HIGH FLIGHT.
+  In Memory of F. Hugh Magee, brother of John Magee (WWII Ace) author of poem HIGH FLIGHT.
   https://en.wikipedia.org/wiki/John_Gillespie_Magee_Jr.                         ~  GOOD READ
   https://joeclarksblog.com/wp-content/uploads/2012/11/high_flight-790x1024.jpg  ~  Poem HIGH FLIGHT
 
