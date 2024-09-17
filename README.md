@@ -1,4 +1,4 @@
-## Decoded METAR Map and Displays
+## METAR Map and Decoded Displays
 ### This is a METAR MAP project to WOW your friends and colleges.
 
 + In Memory of **F. Hugh Magee**, brother of John Magee (WW2 Fighter Ace) and author of a **cool poem** called **HIGH FLIGHT**.
