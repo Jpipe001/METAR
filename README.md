@@ -4,7 +4,7 @@
 + In Memory of **F. Hugh Magee**, brother of John Magee (WW2 Fighter Ace) and author of a **cool poem** called **HIGH FLIGHT**.
 + Created by John Pipe with lots of help from **David Bird** and some code from **Rui Santos.**
 
-+ This Metar Map works **WORLDWIDE** to show Airport METARs from Avationweather.Gov.
++ This Metar Map works **WORLDWIDE** to show Airport METARs from Avationweather.Gov and includes **flashing LEDS** for quick weather identification.
 
 + Most Metar Maps use a Raspberry Pi, this uses a **less expensive option** of ESP32 and gives much more.
   
