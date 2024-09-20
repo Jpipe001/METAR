@@ -16,7 +16,7 @@
  #### YOU WILL NEED:
  + The Arduino IDE Software to compile and load the code, which is free.
  + An ESP32 Development Board.
- +  A chain of up to 100 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport **Flight Category** with Colors, GREEN, BLUE, RED and MAGENTA plus **Weather indication** and more.
+ +  A chain of approximately 60 Color changing LEDS (WS2811 or WS2812 or NEOPIXELS), showing the Airport **Flight Category** with Colors, GREEN, BLUE, RED and MAGENTA plus **Weather indication** and more.
    #### Note: The LEDS are not required to just get these Color Coded Displays of the Airport Summary and Decoded METARs, see examples below.  Feel free to down load the above files and take a "test drive".
 
 ---
@@ -60,14 +60,21 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 
 ![METAR_Summary](https://user-images.githubusercontent.com/24758833/197342754-2bac1db7-003e-47b2-8072-c6f3a0c6f7f8.png)
 
-#### Just "Click" on the STATION name.
+#### Just "Click" on the STATION name to access Station Metar Display.
 ---
 
-+ **Updated: METAR Station Display** Example:
++ **Updated: Station METAR Display** Example:
 
 ![2024-08-04-KFLL](https://github.com/user-attachments/assets/be266e73-e3f8-47f0-a2a8-6efdb23cfa61)
 
-#### "Any Airport ID" can be enterd, even if it is not in the database.
++ ** "Any Airport ID" can be enterd, even if it is not in the database.
++ ** Includes Decoded Remarks
++ ** Includes Sky Cover Change
++ ** Includes Previous Wind Direction
++ ** Includes Heat Index / Wind Chill
++ ** Includes Relative Humidity
++ ** Includes Alimeter Change
++ ** Includes Estimated Density Altitude
 ---
 + **Recently Added:  AIRPORT INFORMATION**  ~  AirNav Link in Station Display for US airports
 
