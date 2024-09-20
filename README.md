@@ -71,7 +71,7 @@ Note: With less than 60 LEDS an external Power Supply is not neccessary and can 
 + ** Includes Decoded Remarks
 + ** Includes Sky Cover Change
 + ** Includes Previous Wind Direction
-+ ** Includes Heat Index / Wind Chill
++ ** Includes Heat Index or Wind Chill
 + ** Includes Relative Humidity
 + ** Includes Alimeter Change
 + ** Includes Estimated Density Altitude
