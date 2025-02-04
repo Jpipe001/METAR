@@ -103,8 +103,8 @@ WiFiServer server(80);    // Set server port to 80
 
 // Please Modify the "Your Network Name" and "Your Network Password" To suit your Project
 
-const char*        ssid = "NETGEAR46";       // Your Network SSID
-const char*    password = "icysea351";       // Your Network Password
+const char*        ssid = "Network SSID";       // Your Network SSID
+const char*    password = "YourPassword";       // Your Network Password
 
 /* Please Modify the "No_Stations and LED_TYPE and COLOR_ORDER" To suit your Project
   Program Note: LED_TYPE and COLOR_ORDER are Important. If LED is RED when it should be GREEN,
