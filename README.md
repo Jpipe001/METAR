@@ -8,7 +8,7 @@
 
 + Most Metar Maps use a Raspberry Pi, this uses a **less expensive option** of ESP32 and gives much more.
   
-+ Works with WS2811 Leds that other Metar Maps use and can be easily upgraded.
++ Works with WS2811 and WS2812 Leds that other Metar Maps use and can be easily upgraded.
 
 + It creates HTML displays that your favorite web browser can access to display an Airport Summary Display and Station Displays.  This shows decoded METAR information and much more without needing extra hardware.  Please see examples below.
 
