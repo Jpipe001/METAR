@@ -111,8 +111,8 @@ WiFiServer server(80);          // Set server port to 80
 
 // Please Modify the "Your Network Name" and "Your Network Password"
 
-//const char*        ssid = "Your Network Name";       // Your Network SSID
-//const char*    password = "Your Network Password";   // Your Network Password
+const char*        ssid = "Your Network Name";       // Your Network SSID
+const char*    password = "Your Network Password";   // Your Network Password
 
 /* Please Modify the "LED_TYPE and LED_DATA_PIN and No_Stations" To suit your Project
    Note: If LED is RED when it should be GREEN, then CHANGE "WS2811" to "WS2812".*/
@@ -2386,3 +2386,4 @@ String Format_Temp_Text (float DegC, float DegF) {
   Display_Text.replace(" ", "&nbsp");
   return Display_Text;
 }
+
